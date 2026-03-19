@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Home Tasks</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Tasks">
+<meta name="theme-color" content="#111110">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSG9tZSBUYXNrcyIsInNob3J0X25hbWUiOiJUYXNrcyIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMTExMTEwIiwidGhlbWVfY29sb3IiOiIjMTExMTEwIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnPjxyZWN0IHdpZHRoPScxMDAnIGhlaWdodD0nMTAwJyByeD0nMjAnIGZpbGw9JyMxMTExMTAnLz48dGV4dCB4PSc1MCcgeT0nNjgnIGZvbnQtc2l6ZT0nNTAnIHRleHQtYW5jaG9yPSdtaWRkbGUnPvCfjqA8L3RleHQ+PC9zdmc+Iiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111110'/><text x='50' y='68' font-size='50' text-anchor='middle'>🎠</text></svg>">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #111110;
+  --bg2: #191918;
+  --surface: #1e1e1c;
+  --surface-up: #262624;
+  --border: #2c2c29;
+  --border-light: #3a3a36;
+  --text: #e5e5e0;
+  --text-mid: #a0a098;
+  --text-dim: #666660;
+  --accent: #d4a843;
+  --accent-dim: rgba(212, 168, 67, 0.12);
+  --accent-glow: rgba(212, 168, 67, 0.25);
+  --high: #e05252;
+  --high-bg: rgba(224, 82, 82, 0.1);
+  --med: #d4a843;
+  --med-bg: rgba(212, 168, 67, 0.1);
+  --low: #5a8a5e;
+  --low-bg: rgba(90, 138, 94, 0.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+  --font: 'Geist', -apple-system, sans-serif;
+  --mono: 'Geist', -apple-system, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+/* ====== VIEWS ====== */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ====== MAIN LIST VIEW ====== */
+.app {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 8px) 16px calc(var(--safe-bottom) + 90px);
+  min-height: 100dvh;
+}
+
+.header {
+  padding: 12px 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: var(--text);
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stat-pill {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-family: var(--mono);
+}
+.stat-pill span { color: var(--accent); }
+
+/* Weekend Section */
+.weekend-section {
+  margin-bottom: 20px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Category Filters */
+.cat-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.cat-filters::-webkit-scrollbar { display: none; }
+.cat-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.cat-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Task Cards */
+.task-list { display: flex; flex-direction: column; gap: 4px; }
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  animation: fadeUp 0.25s ease backwards;
+  position: relative;
+}
+.task-card:active { background: var(--surface-up); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+.task-check {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border-light);
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 2;
+}
+.task-check.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.task-check.checked::after {
+  content: '';
+  width: 7px;
+  height: 4px;
+  border-left: 2px solid var(--bg);
+  border-bottom: 2px solid var(--bg);
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.task-info { flex: 1; min-width: 0; }
+.task-title {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-card.done .task-title {
+  text-decoration: line-through;
+  color: var(--text-mid);
+}
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+.task-cat-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: var(--bg2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.task-subtask-count {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+}
+.task-subtask-count span { color: var(--accent); }
+
+.task-priority-bar {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.task-priority-bar.high { background: var(--high); }
+.task-priority-bar.med { background: var(--med); }
+.task-priority-bar.low { background: var(--low); opacity: 0.5; }
+
+.task-weekend-badge {
+  font-size: 10px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Empty state */
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-dim);
+}
+.empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+.empty p { font-size: 14px; font-weight: 300; }
+
+/* Add Button (FAB) */
+.fab {
+  position: fixed;
+  bottom: calc(var(--safe-bottom) + 24px);
+  right: max(24px, calc((100vw - 540px) / 2 + 16px));
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  border: none;
+  border-radius: 16px;
+  color: var(--bg);
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 24px var(--accent-glow);
+  transition: all 0.15s;
+  z-index: 20;
+}
+.fab:active { transform: scale(0.92); }
+
+/* ====== DETAIL VIEW ====== */
+.detail-view {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 8px) 16px calc(var(--safe-bottom) + 30px);
+  min-height: 100dvh;
+}
+
+.detail-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 24px;
+}
+.back-btn, .del-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.back-btn:active { background: var(--surface-up); }
+.del-btn { color: var(--high); border-color: rgba(224,82,82,0.2); }
+.del-btn:active { background: var(--high-bg); }
+
+.job-title {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+
+.detail-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+.badge-cat { background: var(--surface); border-color: var(--border); color: var(--text-mid); }
+.badge-priority-high { background: var(--high-bg); border-color: rgba(224,82,82,0.3); color: var(--high); }
+.badge-priority-med { background: var(--med-bg); border-color: rgba(212,168,67,0.3); color: var(--med); }
+.badge-priority-low { background: var(--low-bg); border-color: rgba(90,138,94,0.3); color: var(--low); }
+.badge-weekend { background: var(--accent-dim); border-color: rgba(212,168,67,0.3); color: var(--accent); }
+
+.detail-section {
+  margin-bottom: 24px;
+}
+.detail-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+/* Subtasks in detail */
+.subtask-list { display: flex; flex-direction: column; gap: 2px; }
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.subtask-item:active { background: var(--surface-up); }
+.subtask-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-light);
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.subtask-check.checked { background: var(--accent); border-color: var(--accent); }
+.subtask-check.checked::after {
+  content: '';
+  width: 6px;
+  height: 3.5px;
+  border-left: 1.5px solid var(--bg);
+  border-bottom: 1.5px solid var(--bg);
+  transform: rotate(-45deg) translateY(-0.5px);
+}
+.subtask-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+}
+.subtask-item.done .subtask-text {
+  text-decoration: line-through;
+  color: var(--text-mid);
+}
+.subtask-del {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.5;
+  transition: all 0.15s;
+}
+.subtask-del:hover { color: var(--high); opacity: 1; }
+
+.add-subtask-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.add-subtask-row input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+.add-subtask-row input::placeholder { color: var(--text-dim); }
+.add-subtask-row input:focus { border-color: var(--accent); }
+.add-subtask-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+/* Notes */
+.notes-area {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+.notes-area::placeholder { color: var(--text-dim); }
+.notes-area:focus { border-color: var(--accent); }
+
+/* Progress bar */
+.progress-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ====== ADD/EDIT FORM VIEW ====== */
+.form-view {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 8px) 16px calc(var(--safe-bottom) + 30px);
+  min-height: 100dvh;
+}
+
+.form-group { margin-bottom: 20px; }
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  display: block;
+}
+.form-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-dim); font-weight: 300; }
+
+/* Category selector */
+.cat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cat-option {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-option.selected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Priority selector */
+.priority-options { display: flex; gap: 8px; }
+.pri-option {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.pri-option.selected.high { background: var(--high-bg); border-color: rgba(224,82,82,0.4); color: var(--high); }
+.pri-option.selected.med { background: var(--med-bg); border-color: rgba(212,168,67,0.4); color: var(--med); }
+.pri-option.selected.low { background: var(--low-bg); border-color: rgba(90,138,94,0.4); color: var(--low); }
+
+/* Weekend toggle */
+.weekend-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.weekend-toggle-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+.toggle-switch {
+  width: 44px;
+  height: 26px;
+  background: var(--border);
+  border-radius: 13px;
+  position: relative;
+  transition: background 0.2s;
+}
+.toggle-switch.on { background: var(--accent); }
+.toggle-switch::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+.toggle-switch.on::after { transform: translateX(18px); }
+
+/* Save button */
+.save-btn {
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.15s;
+}
+.save-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+/* ====== CONFIRM DIALOG ====== */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.overlay.show { display: flex; }
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+}
+.dialog p { font-size: 15px; margin-bottom: 20px; color: var(--text-mid); }
+.dialog-actions { display: flex; gap: 10px; }
+.dialog-btn {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.dialog-cancel { background: var(--surface-up); color: var(--text-mid); }
+.dialog-confirm { background: var(--high-bg); border-color: rgba(224,82,82,0.3); color: var(--high); }
+
+@media (hover: none) {
+  .subtask-del { opacity: 0.7; }
+}
+</style>
+</head>
+<body>
+
+<!-- ====== MAIN LIST VIEW ====== -->
+<div class="view active" id="viewList">
+  <div class="app">
+    <div class="header">
+      <h1>Home Tasks</h1>
+      <div class="stat-pill" id="taskCount"></div>
+    </div>
+
+    <div class="cat-filters" id="catFilters"></div>
+
+    <div id="weekendSection"></div>
+    <div class="section-label" id="allLabel" style="display:none">All Tasks <span></span></div>
+    <div class="task-list" id="taskList"></div>
+  </div>
+  <button class="fab" id="fabAdd" onclick="showForm()">+</button>
+</div>
+
+<!-- ====== DETAIL VIEW ====== -->
+<div class="view" id="viewDetail">
+  <div class="detail-view">
+    <div class="detail-nav">
+      <button class="back-btn" onclick="showList()">← Back</button>
+      <button class="del-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ====== ADD/EDIT FORM ====== -->
+<div class="view" id="viewForm">
+  <div class="form-view">
+    <div class="detail-nav">
+      <button class="back-btn" onclick="showList()">← Cancel</button>
+      <div id="formTitle" style="font-size:16px;font-weight:600;">New Task</div>
+      <div style="width:70px"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Task Name</label>
+      <input class="form-input" id="fTitle" placeholder="What needs doing?" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="cat-grid" id="fCatGrid"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Priority</label>
+      <div class="priority-options">
+        <button class="pri-option low" data-p="low" onclick="setPri('low')">Low</button>
+        <button class="pri-option med" data-p="med" onclick="setPri('med')">Med</button>
+        <button class="pri-option high" data-p="high" onclick="setPri('high')">High</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">This Weekend?</label>
+      <div class="weekend-toggle" onclick="toggleWeekend()">
+        <div class="weekend-toggle-label">Add to "This Weekend" list</div>
+        <div class="toggle-switch" id="fWeekendToggle"></div>
+      </div>
+    </div>
+
+    <button class="save-btn" onclick="saveTask()">Save Task</button>
+  </div>
+</div>
+
+<!-- ====== DELETE CONFIRM ====== -->
+<div class="overlay" id="deleteOverlay">
+  <div class="dialog">
+    <p>Delete this task and all its subtasks?</p>
+    <div class="dialog-actions">
+      <button class="dialog-btn dialog-cancel" onclick="closeDelete()">Cancel</button>
+      <button class="dialog-btn dialog-confirm" onclick="doDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'home-tasks-v1';
+const CATEGORIES = [
+  'Plumbing','Electrical','HVAC','Yard / Landscaping',
+  'Painting / Drywall','Flooring','General Repair','Cleaning / Organization','Insulation'
+];
+
+let tasks = [];
+let activeFilter = 'all';
+let currentTaskId = null;
+
+// Form state
+let formPri = 'low';
+let formCat = '';
+let formWeekend = false;
+let editId = null;
+
+// ===== STORAGE =====
+async function load() {
+  try {
+    const r = await window.storage.get(STORE_KEY);
+    if (r && r.value) tasks = JSON.parse(r.value);
+  } catch { tasks = []; }
+  render();
+}
+
+async function save() {
+  try { await window.storage.set(STORE_KEY, JSON.stringify(tasks)); } catch(e) { console.error(e); }
+}
+
+// ===== VIEW SWITCHING =====
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showList() {
+  showView('viewList');
+  render();
+}
+
+function showDetail(id) {
+  currentTaskId = id;
+  showView('viewDetail');
+  renderDetail();
+}
+
+function showForm(id) {
+  editId = id || null;
+  formPri = 'low'; formCat = ''; formWeekend = false;
+  document.getElementById('fTitle').value = '';
+
+  if (editId) {
+    const t = tasks.find(t => t.id === editId);
+    if (t) {
+      document.getElementById('fTitle').value = t.title;
+      formPri = t.priority;
+      formCat = t.category;
+      formWeekend = t.weekend;
+    }
+    document.getElementById('formTitle').textContent = 'Edit Task';
+  } else {
+    document.getElementById('formTitle').textContent = 'New Task';
+  }
+
+  renderFormCats();
+  renderFormPri();
+  renderFormWeekend();
+  showView('viewForm');
+  setTimeout(() => { if (!editId) document.getElementById('fTitle').focus(); }, 100);
+}
+
+// ===== RENDERING: MAIN LIST =====
+function render() {
+  renderFilters();
+  renderTaskList();
+  const active = tasks.filter(t => !t.done).length;
+  document.getElementById('taskCount').innerHTML = `<span>${active}</span> / ${tasks.length}`;
+}
+
+function renderFilters() {
+  const el = document.getElementById('catFilters');
+  const cats = ['All', ...CATEGORIES];
+  el.innerHTML = cats.map(c => {
+    const key = c === 'All' ? 'all' : c;
+    const isActive = activeFilter === key;
+    return `<button class="cat-btn ${isActive?'active':''}" onclick="setFilter('${key.replace(/'/g,"\\'")}')">${c}</button>`;
+  }).join('');
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  render();
+}
+
+function renderTaskList() {
+  let filtered = tasks;
+  if (activeFilter !== 'all') {
+    filtered = tasks.filter(t => t.category === activeFilter);
+  }
+
+  const weekendTasks = filtered.filter(t => t.weekend && !t.done);
+  const otherTasks = filtered.filter(t => !(t.weekend && !t.done));
+
+  // Sort: incomplete first, then by priority weight, then by creation date
+  const priWeight = { high: 0, med: 1, low: 2 };
+  const sortFn = (a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (priWeight[a.priority] !== priWeight[b.priority]) return priWeight[a.priority] - priWeight[b.priority];
+    return b.created - a.created;
+  };
+  weekendTasks.sort(sortFn);
+  otherTasks.sort(sortFn);
+
+  // Weekend section
+  const ws = document.getElementById('weekendSection');
+  if (weekendTasks.length > 0) {
+    ws.innerHTML = `
+      <div class="section-label">⚡ This Weekend</div>
+      <div class="task-list" style="margin-bottom:20px">${weekendTasks.map(cardHtml).join('')}</div>
+    `;
+  } else {
+    ws.innerHTML = '';
+  }
+
+  // All tasks label
+  const al = document.getElementById('allLabel');
+  al.style.display = (weekendTasks.length > 0 && otherTasks.length > 0) ? 'flex' : 'none';
+  al.innerHTML = 'Everything Else';
+  al.innerHTML += `<span></span>`;
+  // Fix: restore the ::after via re-adding class
+  al.className = 'section-label';
+
+  // Task list
+  const tl = document.getElementById('taskList');
+  if (otherTasks.length === 0 && weekendTasks.length === 0) {
+    tl.innerHTML = `<div class="empty"><div class="empty-icon">🏠</div><p>No tasks yet — tap + to add one</p></div>`;
+  } else {
+    tl.innerHTML = otherTasks.map(cardHtml).join('');
+  }
+}
+
+function cardHtml(t) {
+  const subDone = (t.subtasks || []).filter(s => s.done).length;
+  const subTotal = (t.subtasks || []).length;
+  const subStr = subTotal > 0 ? `<span class="task-subtask-count"><span>${subDone}</span>/${subTotal}</span>` : '';
+
+  return `
+    <div class="task-card ${t.done?'done':''}" style="animation-delay:${Math.random()*80}ms">
+      <div class="task-check ${t.done?'checked':''}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
+      <div class="task-info" onclick="showDetail('${t.id}')">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+          <span class="task-cat-badge">${esc(t.category || 'Uncategorized')}</span>
+          ${subStr}
+        </div>
+      </div>
+      <div class="task-priority-bar ${t.priority}"></div>
+    </div>
+  `;
+}
+
+// ===== RENDERING: DETAIL =====
+function renderDetail() {
+  const t = tasks.find(t => t.id === currentTaskId);
+  if (!t) { showList(); return; }
+
+  const subDone = (t.subtasks || []).filter(s => s.done).length;
+  const subTotal = (t.subtasks || []).length;
+  const pct = subTotal > 0 ? Math.round((subDone / subTotal) * 100) : 0;
+
+  const priBadgeClass = t.priority === 'high' ? 'badge-priority-high' : t.priority === 'med' ? 'badge-priority-med' : 'badge-priority-low';
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="job-title">${esc(t.title)}</div>
+    <div class="detail-badges">
+      <span class="badge badge-cat">${esc(t.category || 'Uncategorized')}</span>
+      <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)} Priority</span>
+      ${t.weekend ? '<span class="badge badge-weekend">⚡ This Weekend</span>' : ''}
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-label">Subtasks ${subTotal > 0 ? `(${subDone}/${subTotal})` : ''}</div>
+      ${subTotal > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
+      <div class="subtask-list" style="margin-top:10px">
+        ${(t.subtasks || []).map((s, i) => `
+          <div class="subtask-item ${s.done?'done':''}">
+            <div class="subtask-check ${s.done?'checked':''}" onclick="toggleSub('${t.id}',${i})"></div>
+            <span class="subtask-text">${esc(s.text)}</span>
+            <button class="subtask-del" onclick="delSub('${t.id}',${i})">✕</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="add-subtask-row">
+        <input id="subInput" placeholder="Add a step…" onkeydown="if(event.key==='Enter')addSub()">
+        <button class="add-subtask-btn" onclick="addSub()">Add</button>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-label">Notes</div>
+      <textarea class="notes-area" id="notesArea" placeholder="Part numbers, measurements, links…" onblur="saveNotes()">${esc(t.notes || '')}</textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="back-btn" style="flex:1;text-align:center" onclick="showForm('${t.id}')">Edit Task</button>
+      <button class="back-btn" style="flex:1;text-align:center" onclick="toggleDone('${t.id}');renderDetail()">
+        ${t.done ? 'Mark Active' : '✓ Mark Done'}
+      </button>
+    </div>
+  `;
+}
+
+// ===== ACTIONS =====
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; save(); render(); }
+}
+
+function toggleSub(tid, idx) {
+  const t = tasks.find(t => t.id === tid);
+  if (t && t.subtasks[idx]) {
+    t.subtasks[idx].done = !t.subtasks[idx].done;
+    // If all subtasks done, mark parent done
+    const allDone = t.subtasks.every(s => s.done);
+    if (allDone && t.subtasks.length > 0) t.done = true;
+    save();
+    renderDetail();
+  }
+}
+
+function addSub() {
+  const input = document.getElementById('subInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const t = tasks.find(t => t.id === currentTaskId);
+  if (t) {
+    if (!t.subtasks) t.subtasks = [];
+    t.subtasks.push({ text, done: false });
+    save();
+    input.value = '';
+    renderDetail();
+  }
+}
+
+function delSub(tid, idx) {
+  const t = tasks.find(t => t.id === tid);
+  if (t && t.subtasks) {
+    t.subtasks.splice(idx, 1);
+    save();
+    renderDetail();
+  }
+}
+
+function saveNotes() {
+  const t = tasks.find(t => t.id === currentTaskId);
+  if (t) {
+    t.notes = document.getElementById('notesArea').value;
+    save();
+  }
+}
+
+function confirmDelete() {
+  document.getElementById('deleteOverlay').classList.add('show');
+}
+function closeDelete() {
+  document.getElementById('deleteOverlay').classList.remove('show');
+}
+function doDelete() {
+  tasks = tasks.filter(t => t.id !== currentTaskId);
+  save();
+  closeDelete();
+  showList();
+}
+
+// ===== FORM =====
+function renderFormCats() {
+  document.getElementById('fCatGrid').innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${c}</button>`
+  ).join('');
+}
+function setFormCat(c) {
+  formCat = c;
+  renderFormCats();
+}
+
+function renderFormPri() {
+  document.querySelectorAll('.pri-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.p === formPri);
+  });
+}
+function setPri(p) {
+  formPri = p;
+  renderFormPri();
+}
+
+function renderFormWeekend() {
+  document.getElementById('fWeekendToggle').classList.toggle('on', formWeekend);
+}
+function toggleWeekend() {
+  formWeekend = !formWeekend;
+  renderFormWeekend();
+}
+
+function saveTask() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { document.getElementById('fTitle').focus(); return; }
+
+  if (editId) {
+    const t = tasks.find(t => t.id === editId);
+    if (t) {
+      t.title = title;
+      t.category = formCat || 'General Repair';
+      t.priority = formPri;
+      t.weekend = formWeekend;
+    }
+  } else {
+    tasks.unshift({
+      id: crypto.randomUUID(),
+      title,
+      category: formCat || 'General Repair',
+      priority: formPri,
+      weekend: formWeekend,
+      done: false,
+      subtasks: [],
+      notes: '',
+      created: Date.now()
+    });
+  }
+
+  save();
+  showList();
+}
+
+// ===== UTILS =====
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// ===== INIT =====
+load();
+</script>
+</body>
+</html>
