@@ -675,6 +675,14 @@ body {
       </div>
     </div>
 
+    <div class="form-group">
+      <label class="form-label">Next Weekend?</label>
+      <div class="weekend-toggle" onclick="toggleNextWeekend()">
+        <div class="weekend-toggle-label">Add to "Next Weekend" list</div>
+        <div class="toggle-switch" id="fNextWeekendToggle"></div>
+      </div>
+    </div>
+
     <!-- Subtasks (edit mode only) -->
     <div class="form-group" id="fSubtasksGroup" style="display:none">
       <label class="form-label">Steps</label>
@@ -723,6 +731,7 @@ let currentTaskId = null;
 let formPri = 'low';
 let formCat = '';
 let formWeekend = false;
+let formNextWeekend = false;
 let editId = null;
 
 // ===== STORAGE =====
@@ -765,7 +774,7 @@ let formSubs = [];
 
 function showForm(id) {
   editId = id || null;
-  formPri = 'low'; formCat = ''; formWeekend = false;
+  formPri = 'low'; formCat = ''; formWeekend = false; formNextWeekend = false;
   formSubs = [];
   document.getElementById('fTitle').value = '';
   document.getElementById('fNotes').value = '';
@@ -779,6 +788,7 @@ function showForm(id) {
       formPri = t.priority;
       formCat = t.category;
       formWeekend = t.weekend;
+      formNextWeekend = t.nextWeekend || false;
       formSubs = (t.subtasks || []).map(s => ({ ...s }));
       document.getElementById('fNotes').value = t.notes || '';
     }
@@ -795,6 +805,7 @@ function showForm(id) {
   renderFormCats();
   renderFormPri();
   renderFormWeekend();
+  renderFormNextWeekend();
   if (isEdit) renderFormSubs();
   showView('viewForm');
   setTimeout(() => { if (!editId) document.getElementById('fTitle').focus(); }, 100);
@@ -845,7 +856,8 @@ function render() {
 
 function renderTaskList() {
   const weekendTasks = tasks.filter(t => t.weekend && !t.done);
-  const otherTasks = tasks.filter(t => !(t.weekend && !t.done));
+  const nextWeekendTasks = tasks.filter(t => t.nextWeekend && !t.done);
+  const otherTasks = tasks.filter(t => !((t.weekend || t.nextWeekend) && !t.done));
 
   // Sort: incomplete first, then by priority weight, then by creation date
   const priWeight = { high: 0, med: 1, low: 2 };
@@ -855,22 +867,30 @@ function renderTaskList() {
     return b.created - a.created;
   };
   weekendTasks.sort(sortFn);
+  nextWeekendTasks.sort(sortFn);
   otherTasks.sort(sortFn);
 
   // Weekend section
   const ws = document.getElementById('weekendSection');
+  let wsHtml = '';
   if (weekendTasks.length > 0) {
-    ws.innerHTML = `
+    wsHtml += `
       <div class="section-label">⚡ This Weekend</div>
       <div class="task-list" style="margin-bottom:20px">${weekendTasks.map(cardHtml).join('')}</div>
     `;
-  } else {
-    ws.innerHTML = '';
   }
+  if (nextWeekendTasks.length > 0) {
+    wsHtml += `
+      <div class="section-label">📅 Next Weekend</div>
+      <div class="task-list" style="margin-bottom:20px">${nextWeekendTasks.map(cardHtml).join('')}</div>
+    `;
+  }
+  ws.innerHTML = wsHtml;
 
   // All tasks label
+  const hasWeekendSections = weekendTasks.length > 0 || nextWeekendTasks.length > 0;
   const al = document.getElementById('allLabel');
-  al.style.display = (weekendTasks.length > 0 && otherTasks.length > 0) ? 'flex' : 'none';
+  al.style.display = (hasWeekendSections && otherTasks.length > 0) ? 'flex' : 'none';
   al.innerHTML = 'Everything Else';
   al.innerHTML += `<span></span>`;
   // Fix: restore the ::after via re-adding class
@@ -878,7 +898,7 @@ function renderTaskList() {
 
   // Task list
   const tl = document.getElementById('taskList');
-  if (otherTasks.length === 0 && weekendTasks.length === 0) {
+  if (otherTasks.length === 0 && weekendTasks.length === 0 && nextWeekendTasks.length === 0) {
     tl.innerHTML = `<div class="empty"><div class="empty-icon">🏠</div><p>No tasks yet — tap + to add one</p></div>`;
   } else {
     tl.innerHTML = otherTasks.map(cardHtml).join('');
@@ -919,6 +939,7 @@ function renderDetail() {
       <span class="badge badge-cat">${esc(t.category || 'Uncategorized')}</span>
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
       ${t.weekend ? '<span class="badge badge-weekend">⚡ Weekend</span>' : ''}
+      ${t.nextWeekend ? '<span class="badge badge-weekend">📅 Next Weekend</span>' : ''}
     </div>
     <button class="edit-btn" onclick="showForm('${t.id}')">Edit</button>
   `;
@@ -1035,6 +1056,14 @@ function toggleWeekend() {
   renderFormWeekend();
 }
 
+function renderFormNextWeekend() {
+  document.getElementById('fNextWeekendToggle').classList.toggle('on', formNextWeekend);
+}
+function toggleNextWeekend() {
+  formNextWeekend = !formNextWeekend;
+  renderFormNextWeekend();
+}
+
 function saveTask() {
   const title = document.getElementById('fTitle').value.trim();
   if (!title) { document.getElementById('fTitle').focus(); return; }
@@ -1046,6 +1075,7 @@ function saveTask() {
       t.category = formCat || 'General Repair';
       t.priority = formPri;
       t.weekend = formWeekend;
+      t.nextWeekend = formNextWeekend;
       t.subtasks = formSubs;
       t.notes = document.getElementById('fNotes').value;
     }
@@ -1059,6 +1089,7 @@ function saveTask() {
       category: formCat || 'General Repair',
       priority: formPri,
       weekend: formWeekend,
+      nextWeekend: formNextWeekend,
       done: false,
       subtasks: [],
       notes: '',
