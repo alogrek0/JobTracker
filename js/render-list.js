@@ -1,7 +1,7 @@
 // ===== RENDERING: MAIN LIST VIEW =====
 
-import { tasks } from './state.js';
-import { esc, catLabel } from './utils.js';
+import * as state from './state.js';
+import { esc, catLabel, formatMinutes } from './utils.js';
 import { toDateStr, getWeekendLabel } from './weekends.js';
 
 export function renderMiniCals() {
@@ -90,6 +90,7 @@ function cardHtml(t) {
   const subDone = (t.subtasks || []).filter(s => s.done).length;
   const subTotal = (t.subtasks || []).length;
   const subStr = subTotal > 0 ? `<span class="task-subtask-count"><span>${subDone}</span>/${subTotal}</span>` : '';
+  const estStr = t.estimateMin ? `<span class="task-estimate">${formatMinutes(t.estimateMin)}</span>` : '';
 
   return `
     <div class="task-card ${t.done ? 'done' : ''}" style="animation-delay:${Math.random() * 50}ms">
@@ -99,11 +100,35 @@ function cardHtml(t) {
         <div class="task-meta">
           <span class="task-cat-badge">${catLabel(t.category || 'Uncategorized', 'badge')}</span>
           ${subStr}
+          ${estStr}
         </div>
       </button>
       <div class="task-priority-bar ${t.priority}"></div>
     </div>
   `;
+}
+
+function weekendBudgetHtml(wid, taskGroup) {
+  var budget = state.getWeekendBudget(wid);
+  var planned = 0;
+  taskGroup.forEach(function (t) { if (t.estimateMin) planned += t.estimateMin; });
+  if (!budget && !planned) return '';
+
+  var parts = [];
+  if (planned > 0 && budget) {
+    var remaining = budget - planned;
+    var overClass = remaining < 0 ? ' budget-over' : '';
+    parts.push(`<span class="budget-bar${overClass}">${formatMinutes(planned)} / ${formatMinutes(budget)}</span>`);
+    if (remaining !== 0) {
+      var remLabel = remaining > 0 ? formatMinutes(remaining) + ' left' : '\u2212' + formatMinutes(-remaining) + ' over';
+      parts.push(`<span class="budget-remaining${overClass}">${remLabel}</span>`);
+    }
+  } else if (planned > 0) {
+    parts.push(`<span class="budget-bar">${formatMinutes(planned)} planned</span>`);
+  } else if (budget) {
+    parts.push(`<span class="budget-bar">${formatMinutes(budget)} budget</span>`);
+  }
+  return `<div class="weekend-budget-summary">${parts.join('')}</div>`;
 }
 
 export function renderTaskList() {
@@ -116,7 +141,7 @@ export function renderTaskList() {
 
   const weekendGroups = {};
   const otherTasks = [];
-  tasks.forEach(function (t) {
+  state.tasks.forEach(function (t) {
     if (t.weekendId && !t.done) {
       if (!weekendGroups[t.weekendId]) weekendGroups[t.weekendId] = [];
       weekendGroups[t.weekendId].push(t);
@@ -133,6 +158,7 @@ export function renderTaskList() {
     weekendGroups[wid].sort(sortFn);
     wsHtml += `
       <div class="section-label">${getWeekendLabel(wid)}</div>
+      ${weekendBudgetHtml(wid, weekendGroups[wid])}
       <div class="task-list" style="margin-bottom:20px">${weekendGroups[wid].map(cardHtml).join('')}</div>
     `;
   });

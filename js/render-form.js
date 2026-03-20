@@ -1,7 +1,7 @@
 // ===== RENDERING: ADD/EDIT FORM =====
 
 import * as state from './state.js';
-import { catLabel } from './utils.js';
+import { catLabel, ESTIMATE_OPTIONS, BUDGET_OPTIONS, formatMinutes } from './utils.js';
 import { CATEGORIES } from './storage.js';
 import { getThisWeekendSat, getNextWeekendSat, formatWeekendRange } from './weekends.js';
 
@@ -49,6 +49,48 @@ export function renderFormWeekend() {
 
 export function getWeekendOptionById(idx) {
   return _weekendOptions[idx];
+}
+
+export function renderFormEstimate() {
+  var group = document.getElementById('fEstimateGroup');
+  // Only show estimate picker when a weekend is selected
+  if (!state.formWeekendId) {
+    group.style.display = 'none';
+    return;
+  }
+  group.style.display = 'block';
+  var grid = document.getElementById('fEstimateGrid');
+  grid.innerHTML = '<button class="cat-option' + (state.formEstimate == null ? ' selected' : '') + '" data-est-min="0" type="button">None</button>' +
+    ESTIMATE_OPTIONS.map(function (o) {
+      return '<button class="cat-option' + (state.formEstimate === o.min ? ' selected' : '') + '" data-est-min="' + o.min + '" type="button">' + o.label + '</button>';
+    }).join('');
+}
+
+export function renderFormBudget() {
+  var group = document.getElementById('fBudgetGroup');
+  if (!state.formWeekendId) {
+    group.style.display = 'none';
+    return;
+  }
+  group.style.display = 'block';
+  var currentBudget = state.getWeekendBudget(state.formWeekendId);
+  var grid = document.getElementById('fBudgetGrid');
+  grid.innerHTML = '<button class="cat-option' + (currentBudget == null ? ' selected' : '') + '" data-budget-min="0" type="button">No limit</button>' +
+    BUDGET_OPTIONS.map(function (o) {
+      return '<button class="cat-option' + (currentBudget === o.min ? ' selected' : '') + '" data-budget-min="' + o.min + '" type="button">' + o.label + '</button>';
+    }).join('');
+
+  // Show current planned summary
+  var planned = state.getWeekendPlanned(state.formWeekendId);
+  var summaryEl = document.getElementById('fBudgetSummary');
+  if (currentBudget && planned > 0) {
+    var remaining = currentBudget - planned;
+    var cls = remaining < 0 ? 'budget-over' : 'budget-ok';
+    summaryEl.innerHTML = '<span class="' + cls + '">Planned: ' + formatMinutes(planned) + ' / ' + formatMinutes(currentBudget) + '</span>';
+    summaryEl.style.display = 'block';
+  } else {
+    summaryEl.style.display = 'none';
+  }
 }
 
 export function renderFormSubs() {

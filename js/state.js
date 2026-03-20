@@ -1,10 +1,11 @@
 // ===== APP STATE =====
 // Central mutable state shared across modules.
 
-import { loadTasks, saveTasks, loadExtraWeekends, saveExtraWeekends } from './storage.js';
+import { loadTasks, saveTasks, loadExtraWeekends, saveExtraWeekends, loadWeekendBudgets, saveWeekendBudgets } from './storage.js';
 
 export let tasks = [];
 export let extraWeekends = [];
+export let weekendBudgets = {};
 export let currentTaskId = null;
 export let stepEditMode = false;
 
@@ -12,17 +13,20 @@ export let stepEditMode = false;
 export let formPri = 'low';
 export let formCat = '';
 export let formWeekendId = null;
+export let formEstimate = null;
 export let editId = null;
 export let formSubs = [];
 
-// Setters (needed since ES module exports are live bindings but not directly assignable from outside)
+// Setters
 export function setTasks(t) { tasks = t; }
 export function setExtraWeekends(w) { extraWeekends = w; }
+export function setWeekendBudgets(b) { weekendBudgets = b; }
 export function setCurrentTaskId(id) { currentTaskId = id; }
 export function setStepEditMode(v) { stepEditMode = v; }
 export function setFormPri(v) { formPri = v; }
 export function setFormCat(v) { formCat = v; }
 export function setFormWeekendId(v) { formWeekendId = v; }
+export function setFormEstimate(v) { formEstimate = v; }
 export function setEditId(v) { editId = v; }
 export function setFormSubs(v) { formSubs = v; }
 
@@ -33,10 +37,36 @@ export function save() {
 export function load() {
   tasks = loadTasks();
   extraWeekends = loadExtraWeekends();
+  weekendBudgets = loadWeekendBudgets();
 }
 
 export function saveWeekends() {
   saveExtraWeekends(extraWeekends);
+}
+
+export function saveBudgets() {
+  saveWeekendBudgets(weekendBudgets);
+}
+
+export function getWeekendBudget(wid) {
+  return weekendBudgets[wid] || null;
+}
+
+export function setWeekendBudget(wid, minutes) {
+  if (minutes == null) {
+    delete weekendBudgets[wid];
+  } else {
+    weekendBudgets[wid] = minutes;
+  }
+  saveBudgets();
+}
+
+export function getWeekendPlanned(wid) {
+  var total = 0;
+  tasks.forEach(function (t) {
+    if (t.weekendId === wid && !t.done && t.estimateMin) total += t.estimateMin;
+  });
+  return total;
 }
 
 // ===== SUBTASK / PARENT SYNC (Change #1) =====

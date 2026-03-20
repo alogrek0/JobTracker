@@ -1,7 +1,7 @@
 // ===== RENDERING: DETAIL VIEW =====
 
 import { tasks, currentTaskId, stepEditMode } from './state.js';
-import { esc, catLabel } from './utils.js';
+import { esc, catLabel, formatMinutes } from './utils.js';
 import { getWeekendLabel } from './weekends.js';
 
 export function renderDetail() {
@@ -16,6 +16,7 @@ export function renderDetail() {
       <span class="badge badge-cat">${catLabel(t.category || 'Uncategorized', 'badge')}</span>
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
       ${t.weekendId ? '<span class="badge badge-weekend">' + getWeekendLabel(t.weekendId) + '</span>' : ''}
+      ${t.estimateMin ? '<span class="badge badge-estimate">' + formatMinutes(t.estimateMin) + '</span>' : ''}
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="step-edit-btn ${stepEditMode ? 'active' : ''}" data-action="toggle-step-edit" type="button">Edit</button>

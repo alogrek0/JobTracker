@@ -5,7 +5,7 @@ import { CATEGORIES, saveExtraWeekends, exportBackup, validateBackup, importBack
 import { getNextWeekendSat, toDateStr, parseSat } from './weekends.js';
 import { renderMiniCals, renderTaskList } from './render-list.js';
 import { renderDetail } from './render-detail.js';
-import { renderFormCats, renderFormPri, renderFormWeekend, renderFormSubs, getWeekendOptionById } from './render-form.js';
+import { renderFormCats, renderFormPri, renderFormWeekend, renderFormEstimate, renderFormBudget, renderFormSubs, getWeekendOptionById } from './render-form.js';
 
 // ===== VIEW SWITCHING =====
 
@@ -38,6 +38,7 @@ function showForm(id) {
   state.setFormPri('low');
   state.setFormCat('');
   state.setFormWeekendId(null);
+  state.setFormEstimate(null);
   state.setFormSubs([]);
   document.getElementById('fTitle').value = '';
   document.getElementById('fNotes').value = '';
@@ -51,6 +52,7 @@ function showForm(id) {
       state.setFormPri(t.priority);
       state.setFormCat(t.category);
       state.setFormWeekendId(t.weekendId || null);
+      state.setFormEstimate(t.estimateMin || null);
       state.setFormSubs((t.subtasks || []).map(s => ({ ...s })));
       document.getElementById('fNotes').value = t.notes || '';
     }
@@ -66,6 +68,8 @@ function showForm(id) {
   renderFormCats();
   renderFormPri();
   renderFormWeekend();
+  renderFormEstimate();
+  renderFormBudget();
   if (isEdit) renderFormSubs();
   showView('viewForm');
   setTimeout(() => { if (!state.editId) document.getElementById('fTitle').focus(); }, 100);
@@ -198,6 +202,7 @@ function saveTask() {
       t.category = state.formCat || 'General Repair';
       t.priority = state.formPri;
       t.weekendId = state.formWeekendId;
+      t.estimateMin = state.formEstimate;
       t.subtasks = state.formSubs;
       t.notes = document.getElementById('fNotes').value;
       // Change #1: sync parent done after form save (subtasks may have changed)
@@ -213,6 +218,7 @@ function saveTask() {
       category: state.formCat || 'General Repair',
       priority: state.formPri,
       weekendId: state.formWeekendId,
+      estimateMin: state.formEstimate,
       done: false,
       subtasks: [],
       notes: '',
@@ -242,7 +248,7 @@ function addWeekend() {
 // ===== IMPORT / EXPORT (Change #5) =====
 
 function doExport() {
-  const data = exportBackup(state.tasks, state.extraWeekends);
+  const data = exportBackup(state.tasks, state.extraWeekends, state.weekendBudgets);
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -279,6 +285,7 @@ function doImport() {
       const result = importBackup(data);
       state.setTasks(result.tasks);
       state.setExtraWeekends(result.extraWeekends);
+      state.setWeekendBudgets(result.weekendBudgets);
       showList();
     };
     reader.readAsText(file);
@@ -325,10 +332,32 @@ document.getElementById('fWeekendGrid').addEventListener('click', function (e) {
     if (opt) {
       state.setFormWeekendId(opt.id);
       renderFormWeekend();
+      renderFormEstimate();
+      renderFormBudget();
     }
     return;
   }
-  if (e.target.closest('[data-action="add-weekend"]')) { addWeekend(); return; }
+  if (e.target.closest('[data-action="add-weekend"]')) { addWeekend(); renderFormEstimate(); renderFormBudget(); return; }
+});
+
+// Estimate grid delegation
+document.getElementById('fEstimateGrid').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-est-min]');
+  if (btn) {
+    var val = parseInt(btn.dataset.estMin);
+    state.setFormEstimate(val > 0 ? val : null);
+    renderFormEstimate();
+  }
+});
+
+// Budget grid delegation
+document.getElementById('fBudgetGrid').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-budget-min]');
+  if (btn) {
+    var val = parseInt(btn.dataset.budgetMin);
+    state.setWeekendBudget(state.formWeekendId, val > 0 ? val : null);
+    renderFormBudget();
+  }
 });
 
 // Main list view delegation
