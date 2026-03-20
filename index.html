@@ -506,6 +506,7 @@ body {
   cursor: pointer;
   transition: all var(--transition);
 }
+.cat-option svg { display: block; }
 .cat-option.selected {
   background: var(--accent-dim);
   border-color: var(--accent);
@@ -1171,7 +1172,7 @@ function doDelete() {
 // ===== FORM =====
 function renderFormCats() {
   document.getElementById('fCatGrid').innerHTML = CATEGORIES.map(c =>
-    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${c}</button>`
+    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${catLabel(c)}</button>`
   ).join('');
 }
 function setFormCat(c) {
@@ -1242,6 +1243,9 @@ function saveTask() {
 }
 
 // ===== UTILS =====
+const INSULATION_ICON = '<svg viewBox="0 0 24 24" width="20" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="3" y="4" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="3" y="10.25" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.55"/><rect x="3" y="16.5" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.25"/></svg>';
+function catLabel(c) { return c === 'Insulation' ? INSULATION_ICON : c; }
+
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
