@@ -5,7 +5,7 @@ import { CATEGORIES, saveExtraWeekends, exportBackup, validateBackup, importBack
 import { getNextWeekendSat, toDateStr, parseSat } from './weekends.js';
 import { renderMiniCals, renderTaskList } from './render-list.js';
 import { renderDetail } from './render-detail.js';
-import { renderFormCats, renderFormPri, renderFormWeekend, renderFormEstimate, renderFormBudget, renderFormSubs, getWeekendOptionById } from './render-form.js';
+import { renderFormCats, renderFormPri, renderFormWeekend, renderFormStretch, renderFormEstimate, renderFormBudget, renderFormSubs, getWeekendOptionById } from './render-form.js';
 
 // ===== VIEW SWITCHING =====
 
@@ -39,6 +39,7 @@ function showForm(id) {
   state.setFormCat('');
   state.setFormWeekendId(null);
   state.setFormEstimate(null);
+  state.setFormStretch(false);
   state.setFormSubs([]);
   document.getElementById('fTitle').value = '';
   document.getElementById('fNotes').value = '';
@@ -53,6 +54,7 @@ function showForm(id) {
       state.setFormCat(t.category);
       state.setFormWeekendId(t.weekendId || null);
       state.setFormEstimate(t.estimateMin || null);
+      state.setFormStretch(!!t.stretch);
       state.setFormSubs((t.subtasks || []).map(s => ({ ...s })));
       document.getElementById('fNotes').value = t.notes || '';
     }
@@ -68,6 +70,7 @@ function showForm(id) {
   renderFormCats();
   renderFormPri();
   renderFormWeekend();
+  renderFormStretch();
   renderFormEstimate();
   renderFormBudget();
   if (isEdit) renderFormSubs();
@@ -203,6 +206,7 @@ function saveTask() {
       t.priority = state.formPri;
       t.weekendId = state.formWeekendId;
       t.estimateMin = state.formEstimate;
+      t.stretch = state.formStretch;
       t.subtasks = state.formSubs;
       t.notes = document.getElementById('fNotes').value;
       // Change #1: sync parent done after form save (subtasks may have changed)
@@ -219,6 +223,7 @@ function saveTask() {
       priority: state.formPri,
       weekendId: state.formWeekendId,
       estimateMin: state.formEstimate,
+      stretch: state.formStretch,
       done: false,
       subtasks: [],
       notes: '',
@@ -332,12 +337,22 @@ document.getElementById('fWeekendGrid').addEventListener('click', function (e) {
     if (opt) {
       state.setFormWeekendId(opt.id);
       renderFormWeekend();
+      renderFormStretch();
       renderFormEstimate();
       renderFormBudget();
     }
     return;
   }
-  if (e.target.closest('[data-action="add-weekend"]')) { addWeekend(); renderFormEstimate(); renderFormBudget(); return; }
+  if (e.target.closest('[data-action="add-weekend"]')) { addWeekend(); renderFormStretch(); renderFormEstimate(); renderFormBudget(); return; }
+});
+
+// Stretch toggle delegation
+document.getElementById('fStretchGrid').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-stretch]');
+  if (btn) {
+    state.setFormStretch(btn.dataset.stretch === '1');
+    renderFormStretch();
+  }
 });
 
 // Estimate grid delegation

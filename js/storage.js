@@ -33,6 +33,7 @@ export function normalizeTask(raw) {
       ? raw.subtasks.filter(s => s && typeof s.text === 'string').map(s => ({ text: s.text, done: !!s.done }))
       : [],
     estimateMin: typeof raw.estimateMin === 'number' && raw.estimateMin > 0 ? raw.estimateMin : null,
+    stretch: !!raw.stretch,
     notes: typeof raw.notes === 'string' ? raw.notes : '',
     created: typeof raw.created === 'number' && raw.created > 0 ? raw.created : Date.now()
   };

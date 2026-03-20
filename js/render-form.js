@@ -51,6 +51,19 @@ export function getWeekendOptionById(idx) {
   return _weekendOptions[idx];
 }
 
+export function renderFormStretch() {
+  var group = document.getElementById('fStretchGroup');
+  if (!state.formWeekendId) {
+    group.style.display = 'none';
+    return;
+  }
+  group.style.display = 'block';
+  var grid = document.getElementById('fStretchGrid');
+  grid.innerHTML =
+    '<button class="cat-option' + (!state.formStretch ? ' selected' : '') + '" data-stretch="0" type="button">Committed</button>' +
+    '<button class="cat-option' + (state.formStretch ? ' selected' : '') + '" data-stretch="1" type="button">If time allows</button>';
+}
+
 export function renderFormEstimate() {
   var group = document.getElementById('fEstimateGroup');
   // Only show estimate picker when a weekend is selected
@@ -83,10 +96,12 @@ export function renderFormBudget() {
   // Show current planned summary
   var planned = state.getWeekendPlanned(state.formWeekendId);
   var summaryEl = document.getElementById('fBudgetSummary');
-  if (currentBudget && planned > 0) {
-    var remaining = currentBudget - planned;
+  if (currentBudget && planned.total > 0) {
+    var remaining = currentBudget - planned.committed;
     var cls = remaining < 0 ? 'budget-over' : 'budget-ok';
-    summaryEl.innerHTML = '<span class="' + cls + '">Planned: ' + formatMinutes(planned) + ' / ' + formatMinutes(currentBudget) + '</span>';
+    var text = 'Committed: ' + formatMinutes(planned.committed) + ' / ' + formatMinutes(currentBudget);
+    if (planned.stretch > 0) text += ' + ' + formatMinutes(planned.stretch) + ' stretch';
+    summaryEl.innerHTML = '<span class="' + cls + '">' + text + '</span>';
     summaryEl.style.display = 'block';
   } else {
     summaryEl.style.display = 'none';

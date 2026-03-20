@@ -761,3 +761,52 @@ body {
   padding: 6px 0;
 }
 .budget-ok { color: var(--text-mid); }
+.budget-stretch {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Stretch / optional tasks */
+.task-card.stretch {
+  opacity: 0.6;
+  border-left: 2px dashed var(--border-light);
+}
+.stretch-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  padding: 6px 0 6px 12px;
+  font-style: italic;
+}
+.badge-stretch {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Large task warning */
+.task-large-warn {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--med);
+  background: var(--med-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Weekend overload warning */
+.weekend-overload-warn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--high);
+  padding: 8px 12px;
+  margin: 4px 0 10px;
+  background: var(--high-bg);
+  border: 1px solid rgba(224,82,82,0.2);
+  border-radius: var(--radius-sm);
+}

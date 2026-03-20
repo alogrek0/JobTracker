@@ -14,6 +14,7 @@ export let formPri = 'low';
 export let formCat = '';
 export let formWeekendId = null;
 export let formEstimate = null;
+export let formStretch = false;
 export let editId = null;
 export let formSubs = [];
 
@@ -27,6 +28,7 @@ export function setFormPri(v) { formPri = v; }
 export function setFormCat(v) { formCat = v; }
 export function setFormWeekendId(v) { formWeekendId = v; }
 export function setFormEstimate(v) { formEstimate = v; }
+export function setFormStretch(v) { formStretch = v; }
 export function setEditId(v) { editId = v; }
 export function setFormSubs(v) { formSubs = v; }
 
@@ -62,11 +64,14 @@ export function setWeekendBudget(wid, minutes) {
 }
 
 export function getWeekendPlanned(wid) {
-  var total = 0;
+  var committed = 0, stretch = 0;
   tasks.forEach(function (t) {
-    if (t.weekendId === wid && !t.done && t.estimateMin) total += t.estimateMin;
+    if (t.weekendId === wid && !t.done && t.estimateMin) {
+      if (t.stretch) stretch += t.estimateMin;
+      else committed += t.estimateMin;
+    }
   });
-  return total;
+  return { committed, stretch, total: committed + stretch };
 }
 
 // ===== SUBTASK / PARENT SYNC (Change #1) =====

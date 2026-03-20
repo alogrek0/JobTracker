@@ -17,6 +17,7 @@ export function renderDetail() {
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
       ${t.weekendId ? '<span class="badge badge-weekend">' + getWeekendLabel(t.weekendId) + '</span>' : ''}
       ${t.estimateMin ? '<span class="badge badge-estimate">' + formatMinutes(t.estimateMin) + '</span>' : ''}
+      ${t.stretch ? '<span class="badge badge-stretch">Stretch</span>' : ''}
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="step-edit-btn ${stepEditMode ? 'active' : ''}" data-action="toggle-step-edit" type="button">Edit</button>

@@ -37,21 +37,18 @@ export function renderMiniCals() {
     var ctx = c.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    // Month label
     ctx.font = '600 6px Geist, sans-serif';
     ctx.fillStyle = '#9e9e94';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
 
-    // DOW headers
     ctx.font = '600 5.5px Geist, sans-serif';
     ctx.fillStyle = '#666660';
     for (var i = 0; i < 7; i++) {
       ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
     }
 
-    // Day numbers
     var topOffset = headerH + dowH;
     for (var day = 1; day <= daysInMonth; day++) {
       var dd = new Date(d.getFullYear(), d.getMonth(), day);
@@ -86,14 +83,20 @@ export function renderMiniCals() {
   }
 }
 
-function cardHtml(t) {
+function cardHtml(t, budget) {
   const subDone = (t.subtasks || []).filter(s => s.done).length;
   const subTotal = (t.subtasks || []).length;
   const subStr = subTotal > 0 ? `<span class="task-subtask-count"><span>${subDone}</span>/${subTotal}</span>` : '';
   const estStr = t.estimateMin ? `<span class="task-estimate">${formatMinutes(t.estimateMin)}</span>` : '';
 
+  // Large-task warning: task uses >50% of budget
+  const isLarge = budget && t.estimateMin && (t.estimateMin / budget) > 0.5;
+  const largeStr = isLarge ? '<span class="task-large-warn" title="This task uses over half the weekend budget">big task</span>' : '';
+
+  const stretchClass = t.stretch ? ' stretch' : '';
+
   return `
-    <div class="task-card ${t.done ? 'done' : ''}" style="animation-delay:${Math.random() * 50}ms">
+    <div class="task-card ${t.done ? 'done' : ''}${stretchClass}" style="animation-delay:${Math.random() * 50}ms">
       <button class="task-check ${t.done ? 'checked' : ''}" data-action="toggle-done" data-id="${t.id}" aria-label="${t.done ? 'Mark active' : 'Mark done'}" type="button"></button>
       <button class="task-info" data-action="show-detail" data-id="${t.id}" type="button">
         <div class="task-title">${esc(t.title)}</div>
@@ -101,6 +104,7 @@ function cardHtml(t) {
           <span class="task-cat-badge">${catLabel(t.category || 'Uncategorized', 'badge')}</span>
           ${subStr}
           ${estStr}
+          ${largeStr}
         </div>
       </button>
       <div class="task-priority-bar ${t.priority}"></div>
@@ -110,25 +114,47 @@ function cardHtml(t) {
 
 function weekendBudgetHtml(wid, taskGroup) {
   var budget = state.getWeekendBudget(wid);
-  var planned = 0;
-  taskGroup.forEach(function (t) { if (t.estimateMin) planned += t.estimateMin; });
-  if (!budget && !planned) return '';
-
-  var parts = [];
-  if (planned > 0 && budget) {
-    var remaining = budget - planned;
-    var overClass = remaining < 0 ? ' budget-over' : '';
-    parts.push(`<span class="budget-bar${overClass}">${formatMinutes(planned)} / ${formatMinutes(budget)}</span>`);
-    if (remaining !== 0) {
-      var remLabel = remaining > 0 ? formatMinutes(remaining) + ' left' : '\u2212' + formatMinutes(-remaining) + ' over';
-      parts.push(`<span class="budget-remaining${overClass}">${remLabel}</span>`);
+  var planned = { committed: 0, stretch: 0, total: 0 };
+  taskGroup.forEach(function (t) {
+    if (t.estimateMin) {
+      if (t.stretch) planned.stretch += t.estimateMin;
+      else planned.committed += t.estimateMin;
+      planned.total += t.estimateMin;
     }
-  } else if (planned > 0) {
-    parts.push(`<span class="budget-bar">${formatMinutes(planned)} planned</span>`);
-  } else if (budget) {
-    parts.push(`<span class="budget-bar">${formatMinutes(budget)} budget</span>`);
+  });
+  if (!budget && !planned.total) return '';
+
+  var html = '<div class="weekend-budget-summary">';
+
+  if (budget) {
+    var remaining = budget - planned.committed;
+    var overClass = remaining < 0 ? ' budget-over' : '';
+
+    // Main line: committed vs budget
+    html += `<span class="budget-bar${overClass}">${formatMinutes(planned.committed)} / ${formatMinutes(budget)}</span>`;
+
+    if (remaining < 0) {
+      html += `<span class="budget-remaining budget-over">\u2212${formatMinutes(-remaining)} over</span>`;
+    } else if (remaining > 0 && planned.committed > 0) {
+      html += `<span class="budget-remaining">${formatMinutes(remaining)} left</span>`;
+    }
+
+    // Stretch add-on
+    if (planned.stretch > 0) {
+      html += `<span class="budget-stretch">+${formatMinutes(planned.stretch)} stretch</span>`;
+    }
+
+    // Overload warning
+    if (remaining < 0) {
+      html += '</div><div class="weekend-overload-warn">This weekend is overfilled \u2014 consider moving or trimming tasks</div>';
+      return html;
+    }
+  } else if (planned.total > 0) {
+    html += `<span class="budget-bar">${formatMinutes(planned.total)} planned</span>`;
   }
-  return `<div class="weekend-budget-summary">${parts.join('')}</div>`;
+
+  html += '</div>';
+  return html;
 }
 
 export function renderTaskList() {
@@ -155,12 +181,27 @@ export function renderTaskList() {
   const ws = document.getElementById('weekendSection');
   let wsHtml = '';
   sortedWeekendIds.forEach(function (wid) {
-    weekendGroups[wid].sort(sortFn);
+    var group = weekendGroups[wid];
+    var budget = state.getWeekendBudget(wid);
+
+    // Split into committed and stretch
+    var committed = group.filter(t => !t.stretch);
+    var stretch = group.filter(t => t.stretch);
+    committed.sort(sortFn);
+    stretch.sort(sortFn);
+
     wsHtml += `
       <div class="section-label">${getWeekendLabel(wid)}</div>
-      ${weekendBudgetHtml(wid, weekendGroups[wid])}
-      <div class="task-list" style="margin-bottom:20px">${weekendGroups[wid].map(cardHtml).join('')}</div>
+      ${weekendBudgetHtml(wid, group)}
+      <div class="task-list" style="margin-bottom:${stretch.length > 0 ? '8' : '20'}px">${committed.map(t => cardHtml(t, budget)).join('')}</div>
     `;
+
+    if (stretch.length > 0) {
+      wsHtml += `
+        <div class="stretch-label">If time allows</div>
+        <div class="task-list" style="margin-bottom:20px">${stretch.map(t => cardHtml(t, budget)).join('')}</div>
+      `;
+    }
   });
   ws.innerHTML = wsHtml;
 
@@ -175,6 +216,6 @@ export function renderTaskList() {
   if (otherTasks.length === 0 && sortedWeekendIds.length === 0) {
     tl.innerHTML = `<div class="empty"><div class="empty-icon">\uD83C\uDFE0</div><p>No tasks yet \u2014 tap + to add one</p></div>`;
   } else {
-    tl.innerHTML = otherTasks.map(cardHtml).join('');
+    tl.innerHTML = otherTasks.map(t => cardHtml(t, null)).join('');
   }
 }
