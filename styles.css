@@ -25,13 +25,13 @@
   --transition: 120ms ease;
 
   /* Subtle depth tokens */
-  --task-edge-outer: rgba(255, 255, 255, 0.045);
-  --task-edge-inner-top: rgba(255, 255, 255, 0.055);
-  --task-edge-inner-bottom: rgba(0, 0, 0, 0.18);
-  --task-shadow-rest: 0 1px 0 rgba(255,255,255,0.02), 0 8px 18px rgba(0,0,0,0.14);
-  --task-shadow-active: 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0,0,0,0.22);
-  --task-glow: rgba(255,255,255,0.045);
-  --task-shimmer: rgba(255,255,255,0.07);
+  --task-edge-outer: rgba(255, 255, 255, 0.022);
+  --task-edge-inner-top: rgba(255, 255, 255, 0.028);
+  --task-edge-inner-bottom: rgba(0, 0, 0, 0.09);
+  --task-shadow-rest: 0 1px 0 rgba(255,255,255,0.01), 0 4px 9px rgba(0,0,0,0.07);
+  --task-shadow-active: 0 1px 0 rgba(255,255,255,0.015), 0 6px 14px rgba(0,0,0,0.11);
+  --task-glow: rgba(255,255,255,0.022);
+  --task-shimmer: rgba(255,255,255,0.035);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -178,9 +178,9 @@ body {
     linear-gradient(
       to bottom,
       var(--task-edge-inner-top) 0%,
-      rgba(255,255,255,0.015) 22%,
+      rgba(255,255,255,0.008) 22%,
       rgba(255,255,255,0) 45%,
-      rgba(0,0,0,0.03) 72%,
+      rgba(0,0,0,0.015) 72%,
       var(--task-edge-inner-bottom) 100%
     );
   opacity: 0.95;
@@ -211,19 +211,19 @@ body {
 
 /* interaction states */
 .task-card:focus-within {
-  border-color: rgba(255,255,255,0.075);
+  border-color: rgba(255,255,255,0.038);
   box-shadow:
     var(--task-shadow-active),
-    0 0 0 1px rgba(255,255,255,0.015),
-    0 0 18px var(--task-glow);
+    0 0 0 1px rgba(255,255,255,0.008),
+    0 0 9px var(--task-glow);
 }
 
 .task-card:active {
   transform: translateY(1px) scale(0.997);
-  border-color: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.035);
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.02),
-    0 6px 14px rgba(0,0,0,0.18);
+    0 1px 0 rgba(255,255,255,0.01),
+    0 3px 7px rgba(0,0,0,0.09);
 }
 
 .task-card:focus-within::after,
@@ -234,10 +234,10 @@ body {
 
 /* optional: stronger state for emphasized card */
 .task-card.is-emphasized {
-  border-color: rgba(255,255,255,0.085);
+  border-color: rgba(255,255,255,0.042);
   box-shadow:
     var(--task-shadow-active),
-    0 0 0 1px rgba(255,255,255,0.02);
+    0 0 0 1px rgba(255,255,255,0.01);
 }
 
 @keyframes fadeUp {
