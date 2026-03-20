@@ -98,7 +98,7 @@ body {
 /* Mini calendars — rendered via canvas for pixel-perfect sizing */
 .mini-cals {
   display: flex;
-  gap: 2px;
+  gap: 6px;
   align-items: flex-end;
 }
 .mini-cals canvas {
@@ -1044,7 +1044,7 @@ function renderMiniCals() {
   var todayStr = toDateStr(now);
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dow = ['M','T','W','T','F','S','S'];
-  var cellW = 8, cellH = 7, headerH = 8, dowH = 6, gap = 1;
+  var cellW = 10, cellH = 9, headerH = 10, dowH = 8, gap = 1;
   var calW = cellW * 7;
   var container = document.getElementById('miniCals');
   container.innerHTML = '';
@@ -1072,14 +1072,14 @@ function renderMiniCals() {
     ctx.scale(dpr, dpr);
 
     // Month label
-    ctx.font = '600 5px Geist, sans-serif';
+    ctx.font = '600 6px Geist, sans-serif';
     ctx.fillStyle = '#9e9e94';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
 
     // DOW headers
-    ctx.font = '600 4px Geist, sans-serif';
+    ctx.font = '600 5.5px Geist, sans-serif';
     ctx.fillStyle = '#666660';
     for (var i = 0; i < 7; i++) {
       ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
@@ -1104,13 +1104,13 @@ function renderMiniCals() {
         ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 1.5);
         ctx.fill();
         ctx.fillStyle = '#121210';
-        ctx.font = '700 5px Geist, sans-serif';
+        ctx.font = '700 6px Geist, sans-serif';
       } else if (isWknd) {
         ctx.fillStyle = 'rgba(212,168,67,0.4)';
-        ctx.font = '400 4.5px Geist, sans-serif';
+        ctx.font = '400 5.5px Geist, sans-serif';
       } else {
         ctx.fillStyle = '#9e9e94';
-        ctx.font = '400 4.5px Geist, sans-serif';
+        ctx.font = '400 5.5px Geist, sans-serif';
       }
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
