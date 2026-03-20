@@ -23,8 +23,8 @@ export function renderMiniCals() {
   var cellH = Math.round(cellW * 0.87);
   var headerH = Math.round(cellW * 0.93);
   var dowH = Math.round(cellW * 0.73);
-  var fontSize = Math.max(5.5, cellW * 0.53);
-  var fontSizeHead = Math.max(6, cellW * 0.56);
+  var fontSize = Math.round(Math.max(6, cellW * 0.53));
+  var fontSizeHead = Math.round(Math.max(6, cellW * 0.56));
 
   var maxRows = 0;
   for (var p = 0; p < 2; p++) {
@@ -52,12 +52,12 @@ export function renderMiniCals() {
     ctx.fillStyle = '#9e9e94';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
+    ctx.fillText(months[d.getMonth()].toUpperCase(), Math.round(calW / 2), Math.round(headerH / 2));
 
     ctx.font = '600 ' + fontSize + 'px Geist, sans-serif';
     ctx.fillStyle = '#666660';
     for (var i = 0; i < 7; i++) {
-      ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
+      ctx.fillText(dow[i], Math.round(i * cellW + cellW / 2), Math.round(headerH + dowH / 2));
     }
 
     var topOffset = headerH + dowH;
@@ -67,15 +67,15 @@ export function renderMiniCals() {
       var idx = firstDay + day - 1;
       var col = idx % 7;
       var row = Math.floor(idx / 7);
-      var cx = col * cellW + cellW / 2;
-      var cy = topOffset + row * cellH + cellH / 2;
+      var cx = Math.round(col * cellW + cellW / 2);
+      var cy = Math.round(topOffset + row * cellH + cellH / 2);
       var isToday = toDateStr(dd) === todayStr;
       var isWknd = dayOfWeek === 0 || dayOfWeek === 6;
 
       if (isToday) {
         ctx.fillStyle = '#d4a843';
         ctx.beginPath();
-        ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 2);
+        ctx.roundRect(Math.round(col * cellW + 1), Math.round(topOffset + row * cellH), cellW - 2, cellH - 1, 2);
         ctx.fill();
         ctx.fillStyle = '#121210';
         ctx.font = '700 ' + fontSize + 'px Geist, sans-serif';
