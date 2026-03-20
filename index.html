@@ -726,7 +726,7 @@ body {
     <div class="section-label" id="allLabel" style="display:none">All Tasks <span></span></div>
     <div class="task-list" id="taskList"></div>
   </div>
-  <button class="fab" id="fabAdd" onclick="showForm()">+</button>
+  <button class="fab" id="fabAdd">+</button>
 </div>
 
 <!-- ====== DETAIL VIEW ====== -->
@@ -741,7 +741,7 @@ body {
 <div class="view" id="viewForm">
   <div class="form-view">
     <div class="detail-nav">
-      <button class="back-btn" onclick="cancelForm()">← Cancel</button>
+      <button class="back-btn" id="formBackBtn">← Cancel</button>
       <div id="formTitle" class="form-title">New Task</div>
       <div style="width:70px"></div>
     </div>
@@ -758,16 +758,16 @@ body {
 
     <div class="form-group">
       <label class="form-label">Priority</label>
-      <div class="priority-options">
-        <button class="pri-option low" data-p="low" onclick="setPri('low')">Low</button>
-        <button class="pri-option med" data-p="med" onclick="setPri('med')">Med</button>
-        <button class="pri-option high" data-p="high" onclick="setPri('high')">High</button>
+      <div class="priority-options" id="priOptions">
+        <button class="pri-option low" data-p="low">Low</button>
+        <button class="pri-option med" data-p="med">Med</button>
+        <button class="pri-option high" data-p="high">High</button>
       </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">This Weekend?</label>
-      <div class="weekend-toggle" onclick="toggleWeekend()">
+      <div class="weekend-toggle" id="weekendToggleWrap">
         <div class="weekend-toggle-label">Add to "This Weekend" list</div>
         <div class="toggle-switch" id="fWeekendToggle"></div>
       </div>
@@ -775,7 +775,7 @@ body {
 
     <div class="form-group">
       <label class="form-label">Next Weekend?</label>
-      <div class="weekend-toggle" onclick="toggleNextWeekend()">
+      <div class="weekend-toggle" id="nextWeekendToggleWrap">
         <div class="weekend-toggle-label">Add to "Next Weekend" list</div>
         <div class="toggle-switch" id="fNextWeekendToggle"></div>
       </div>
@@ -786,8 +786,8 @@ body {
       <label class="form-label">Steps</label>
       <div id="fSubtaskList"></div>
       <div class="add-subtask-row">
-        <input id="fSubInput" placeholder="Add a step…" onkeydown="if(event.key==='Enter')addFormSub()">
-        <button class="add-subtask-btn" onclick="addFormSub()">Add</button>
+        <input id="fSubInput" placeholder="Add a step…">
+        <button class="add-subtask-btn" id="formAddSubBtn">Add</button>
       </div>
     </div>
 
@@ -797,10 +797,10 @@ body {
       <textarea class="notes-area" id="fNotes" placeholder="Part numbers, measurements, links…"></textarea>
     </div>
 
-    <button class="save-btn" onclick="saveTask()">Save Task</button>
+    <button class="save-btn" id="saveBtn">Save Task</button>
 
     <!-- Delete (edit mode only) -->
-    <button class="del-btn form-delete-btn" id="fDeleteBtn" style="display:none" onclick="confirmDelete()">Delete Task</button>
+    <button class="del-btn form-delete-btn" id="fDeleteBtn" style="display:none">Delete Task</button>
   </div>
 </div>
 
@@ -809,8 +809,8 @@ body {
   <div class="dialog">
     <p>Delete this task and all its subtasks?</p>
     <div class="dialog-actions">
-      <button class="dialog-btn dialog-cancel" onclick="closeDelete()">Cancel</button>
-      <button class="dialog-btn dialog-confirm" onclick="doDelete()">Delete</button>
+      <button class="dialog-btn dialog-cancel" id="dialogCancelBtn">Cancel</button>
+      <button class="dialog-btn dialog-confirm" id="dialogConfirmBtn">Delete</button>
     </div>
   </div>
 </div>
@@ -837,12 +837,30 @@ let editId = null;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isValidUUID(s) { return typeof s === 'string' && UUID_RE.test(s); }
 
+const VALID_PRIORITIES = ['high', 'med', 'low'];
+function normalizeTask(raw) {
+  return {
+    id: raw.id,
+    title: typeof raw.title === 'string' ? raw.title : '',
+    category: typeof raw.category === 'string' && raw.category ? raw.category : 'General Repair',
+    priority: VALID_PRIORITIES.includes(raw.priority) ? raw.priority : 'low',
+    done: !!raw.done,
+    weekend: !!raw.weekend,
+    nextWeekend: !!raw.nextWeekend,
+    subtasks: Array.isArray(raw.subtasks)
+      ? raw.subtasks.filter(s => s && typeof s.text === 'string').map(s => ({ text: s.text, done: !!s.done }))
+      : [],
+    notes: typeof raw.notes === 'string' ? raw.notes : '',
+    created: typeof raw.created === 'number' && raw.created > 0 ? raw.created : Date.now()
+  };
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) tasks = parsed.filter(t => isValidUUID(t.id));
+      if (Array.isArray(parsed)) tasks = parsed.filter(t => t && isValidUUID(t.id)).map(normalizeTask);
     }
   } catch { tasks = []; }
   render();
@@ -1027,8 +1045,8 @@ function cardHtml(t) {
 
   return `
     <div class="task-card ${t.done?'done':''}" style="animation-delay:${Math.random()*50}ms">
-      <div class="task-check ${t.done?'checked':''}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
-      <div class="task-info" onclick="showDetail('${t.id}')">
+      <div class="task-check ${t.done?'checked':''}" data-action="toggle-done" data-id="${t.id}"></div>
+      <div class="task-info" data-action="show-detail" data-id="${t.id}">
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
           <span class="task-cat-badge">${catLabel(t.category || 'Uncategorized','badge')}</span>
@@ -1049,7 +1067,7 @@ function renderDetail() {
 
   // Nav bar: Back | Badges | Edit
   document.getElementById('detailNav').innerHTML = `
-    <button class="back-btn" onclick="showList()">← Back</button>
+    <button class="back-btn" data-action="back-to-list">← Back</button>
     <div class="detail-badges">
       <span class="badge badge-cat">${catLabel(t.category || 'Uncategorized','badge')}</span>
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
@@ -1057,8 +1075,8 @@ function renderDetail() {
       ${t.nextWeekend ? '<span class="badge badge-weekend">📅 Next Weekend</span>' : ''}
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button class="step-edit-btn ${stepEditMode?'active':''}" onclick="toggleStepEdit()">Edit</button>
-      <button class="edit-btn" onclick="showForm('${t.id}')" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="step-edit-btn ${stepEditMode?'active':''}" data-action="toggle-step-edit">Edit</button>
+      <button class="edit-btn" data-action="show-form" data-id="${t.id}" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   `;
 
@@ -1074,7 +1092,7 @@ function renderDetail() {
       ${hasSubtasks ? `
         <div class="subtask-list">
           ${(t.subtasks || []).map((s, i) => `
-            <div class="subtask-item ${s.done?'done':''} ${stepEditMode?'edit-mode':''}" onclick="${stepEditMode ? `startInlineEdit('${t.id}',${i},this)` : `toggleSub('${t.id}',${i})`}" data-sub-idx="${i}">
+            <div class="subtask-item ${s.done?'done':''} ${stepEditMode?'edit-mode':''}" data-task-id="${t.id}" data-sub-idx="${i}">
               <div class="subtask-check ${s.done?'checked':''}"></div>
               <span class="subtask-text">${esc(s.text)}</span>
             </div>
@@ -1082,8 +1100,8 @@ function renderDetail() {
         </div>
       ` : ''}
       <div class="add-subtask-row">
-        <input id="detailSubInput" placeholder="Add a step…" onkeydown="if(event.key==='Enter')addDetailSub('${t.id}')">
-        <button class="add-subtask-btn" onclick="addDetailSub('${t.id}')">+</button>
+        <input id="detailSubInput" placeholder="Add a step…" data-task-id="${t.id}">
+        <button class="add-subtask-btn" data-action="add-detail-sub" data-task-id="${t.id}">+</button>
       </div>
     </div>
 
@@ -1094,7 +1112,7 @@ function renderDetail() {
       </div>
     ` : ''}
 
-    <button class="mark-done-btn" onclick="toggleDone('${t.id}');renderDetail()">
+    <button class="mark-done-btn" data-action="mark-done" data-id="${t.id}">
       ${t.done ? '↩ Mark Active' : '✓ Mark Done'}
     </button>
   `;
@@ -1175,7 +1193,6 @@ function startInlineEdit(tid, idx, el) {
     if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
   });
   input.addEventListener('blur', commitEdit);
-  el.onclick = null;
 }
 
 function confirmDelete() {
@@ -1193,8 +1210,8 @@ function doDelete() {
 
 // ===== FORM =====
 function renderFormCats() {
-  document.getElementById('fCatGrid').innerHTML = CATEGORIES.map(c =>
-    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${catLabel(c,'form')}</button>`
+  document.getElementById('fCatGrid').innerHTML = CATEGORIES.map((c, i) =>
+    `<button class="cat-option ${formCat===c?'selected':''}" data-cat-idx="${i}">${catLabel(c,'form')}</button>`
   ).join('');
 }
 function setFormCat(c) {
@@ -1276,6 +1293,67 @@ function esc(s) {
   d.textContent = s || '';
   return d.innerHTML;
 }
+
+// ===== EVENT WIRING =====
+
+// Static form elements
+document.getElementById('fabAdd').addEventListener('click', function() { showForm(); });
+document.getElementById('formBackBtn').addEventListener('click', cancelForm);
+document.getElementById('weekendToggleWrap').addEventListener('click', toggleWeekend);
+document.getElementById('nextWeekendToggleWrap').addEventListener('click', toggleNextWeekend);
+document.getElementById('fSubInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addFormSub();
+});
+document.getElementById('formAddSubBtn').addEventListener('click', addFormSub);
+document.getElementById('saveBtn').addEventListener('click', saveTask);
+document.getElementById('fDeleteBtn').addEventListener('click', confirmDelete);
+document.getElementById('dialogCancelBtn').addEventListener('click', closeDelete);
+document.getElementById('dialogConfirmBtn').addEventListener('click', doDelete);
+
+// Priority options delegation
+document.getElementById('priOptions').addEventListener('click', function(e) {
+  var btn = e.target.closest('.pri-option');
+  if (btn && btn.dataset.p) setPri(btn.dataset.p);
+});
+
+// Category grid delegation
+document.getElementById('fCatGrid').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-cat-idx]');
+  if (btn) setFormCat(CATEGORIES[parseInt(btn.dataset.catIdx)]);
+});
+
+// Main list view delegation
+document.getElementById('viewList').addEventListener('click', function(e) {
+  var check = e.target.closest('[data-action="toggle-done"]');
+  if (check) { e.stopPropagation(); toggleDone(check.dataset.id); return; }
+  var info = e.target.closest('[data-action="show-detail"]');
+  if (info) { showDetail(info.dataset.id); return; }
+});
+
+// Detail view delegation
+document.getElementById('viewDetail').addEventListener('click', function(e) {
+  if (e.target.closest('[data-action="back-to-list"]')) { showList(); return; }
+  if (e.target.closest('[data-action="toggle-step-edit"]')) { toggleStepEdit(); return; }
+  var formBtn = e.target.closest('[data-action="show-form"]');
+  if (formBtn) { showForm(formBtn.dataset.id); return; }
+  var sub = e.target.closest('.subtask-item[data-sub-idx]');
+  if (sub) {
+    var tid = sub.dataset.taskId;
+    var idx = parseInt(sub.dataset.subIdx);
+    if (stepEditMode) startInlineEdit(tid, idx, sub);
+    else toggleSub(tid, idx);
+    return;
+  }
+  var addSub = e.target.closest('[data-action="add-detail-sub"]');
+  if (addSub) { addDetailSub(addSub.dataset.taskId); return; }
+  var markDone = e.target.closest('[data-action="mark-done"]');
+  if (markDone) { toggleDone(markDone.dataset.id); renderDetail(); return; }
+});
+document.getElementById('viewDetail').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.id === 'detailSubInput') {
+    addDetailSub(e.target.dataset.taskId);
+  }
+});
 
 // ===== INIT =====
 load();
