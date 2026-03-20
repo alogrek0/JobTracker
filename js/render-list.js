@@ -1,0 +1,154 @@
+// ===== RENDERING: MAIN LIST VIEW =====
+
+import { tasks } from './state.js';
+import { esc, catLabel } from './utils.js';
+import { toDateStr, getWeekendLabel } from './weekends.js';
+
+export function renderMiniCals() {
+  var dpr = window.devicePixelRatio || 1;
+  var now = new Date();
+  var todayStr = toDateStr(now);
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var dow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  var cellW = 10, cellH = 9, headerH = 10, dowH = 8;
+  var calW = cellW * 7;
+  var container = document.getElementById('miniCals');
+  container.innerHTML = '';
+
+  var maxRows = 0;
+  for (var p = 0; p < 2; p++) {
+    var dp = new Date(now.getFullYear(), now.getMonth() + p, 1);
+    var fd = (dp.getDay() + 6) % 7;
+    var dim = new Date(dp.getFullYear(), dp.getMonth() + 1, 0).getDate();
+    maxRows = Math.max(maxRows, Math.ceil((fd + dim) / 7));
+  }
+
+  for (var m = 0; m < 2; m++) {
+    var d = new Date(now.getFullYear(), now.getMonth() + m, 1);
+    var firstDay = (d.getDay() + 6) % 7;
+    var daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    var calH = headerH + dowH + maxRows * cellH;
+
+    var c = document.createElement('canvas');
+    c.width = calW * dpr;
+    c.height = calH * dpr;
+    c.style.width = calW + 'px';
+    c.style.height = calH + 'px';
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // Month label
+    ctx.font = '600 6px Geist, sans-serif';
+    ctx.fillStyle = '#9e9e94';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
+
+    // DOW headers
+    ctx.font = '600 5.5px Geist, sans-serif';
+    ctx.fillStyle = '#666660';
+    for (var i = 0; i < 7; i++) {
+      ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
+    }
+
+    // Day numbers
+    var topOffset = headerH + dowH;
+    for (var day = 1; day <= daysInMonth; day++) {
+      var dd = new Date(d.getFullYear(), d.getMonth(), day);
+      var dayOfWeek = dd.getDay();
+      var idx = firstDay + day - 1;
+      var col = idx % 7;
+      var row = Math.floor(idx / 7);
+      var cx = col * cellW + cellW / 2;
+      var cy = topOffset + row * cellH + cellH / 2;
+      var isToday = toDateStr(dd) === todayStr;
+      var isWknd = dayOfWeek === 0 || dayOfWeek === 6;
+
+      if (isToday) {
+        ctx.fillStyle = '#d4a843';
+        ctx.beginPath();
+        ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 1.5);
+        ctx.fill();
+        ctx.fillStyle = '#121210';
+        ctx.font = '700 6px Geist, sans-serif';
+      } else if (isWknd) {
+        ctx.fillStyle = 'rgba(212,168,67,0.4)';
+        ctx.font = '400 5.5px Geist, sans-serif';
+      } else {
+        ctx.fillStyle = '#9e9e94';
+        ctx.font = '400 5.5px Geist, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(day), cx, cy);
+    }
+    container.appendChild(c);
+  }
+}
+
+function cardHtml(t) {
+  const subDone = (t.subtasks || []).filter(s => s.done).length;
+  const subTotal = (t.subtasks || []).length;
+  const subStr = subTotal > 0 ? `<span class="task-subtask-count"><span>${subDone}</span>/${subTotal}</span>` : '';
+
+  return `
+    <div class="task-card ${t.done ? 'done' : ''}" style="animation-delay:${Math.random() * 50}ms">
+      <button class="task-check ${t.done ? 'checked' : ''}" data-action="toggle-done" data-id="${t.id}" aria-label="${t.done ? 'Mark active' : 'Mark done'}" type="button"></button>
+      <button class="task-info" data-action="show-detail" data-id="${t.id}" type="button">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+          <span class="task-cat-badge">${catLabel(t.category || 'Uncategorized', 'badge')}</span>
+          ${subStr}
+        </div>
+      </button>
+      <div class="task-priority-bar ${t.priority}"></div>
+    </div>
+  `;
+}
+
+export function renderTaskList() {
+  const priWeight = { high: 0, med: 1, low: 2 };
+  const sortFn = (a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (priWeight[a.priority] !== priWeight[b.priority]) return priWeight[a.priority] - priWeight[b.priority];
+    return b.created - a.created;
+  };
+
+  const weekendGroups = {};
+  const otherTasks = [];
+  tasks.forEach(function (t) {
+    if (t.weekendId && !t.done) {
+      if (!weekendGroups[t.weekendId]) weekendGroups[t.weekendId] = [];
+      weekendGroups[t.weekendId].push(t);
+    } else {
+      otherTasks.push(t);
+    }
+  });
+
+  const sortedWeekendIds = Object.keys(weekendGroups).sort();
+
+  const ws = document.getElementById('weekendSection');
+  let wsHtml = '';
+  sortedWeekendIds.forEach(function (wid) {
+    weekendGroups[wid].sort(sortFn);
+    wsHtml += `
+      <div class="section-label">${getWeekendLabel(wid)}</div>
+      <div class="task-list" style="margin-bottom:20px">${weekendGroups[wid].map(cardHtml).join('')}</div>
+    `;
+  });
+  ws.innerHTML = wsHtml;
+
+  const hasWeekendSections = sortedWeekendIds.length > 0;
+  otherTasks.sort(sortFn);
+  const al = document.getElementById('allLabel');
+  al.style.display = (hasWeekendSections && otherTasks.length > 0) ? 'flex' : 'none';
+  al.innerHTML = 'Everything Else<span></span>';
+  al.className = 'section-label';
+
+  const tl = document.getElementById('taskList');
+  if (otherTasks.length === 0 && sortedWeekendIds.length === 0) {
+    tl.innerHTML = `<div class="empty"><div class="empty-icon">\uD83C\uDFE0</div><p>No tasks yet \u2014 tap + to add one</p></div>`;
+  } else {
+    tl.innerHTML = otherTasks.map(cardHtml).join('');
+  }
+}
