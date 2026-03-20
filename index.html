@@ -920,13 +920,28 @@ function cancelForm() {
 }
 
 function renderFormSubs() {
-  document.getElementById('fSubtaskList').innerHTML = formSubs.map((s, i) => `
-    <div class="subtask-item" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;padding:10px 14px;">
-      <input class="subtask-edit" value="${esc(s.text)}" onchange="updateFormSub(${i},this.value)"
-             style="flex:1;background:transparent;border:none;color:var(--text);font-size:14px;outline:none;">
-      <button class="subtask-del" onclick="delFormSub(${i})">✕</button>
-    </div>
-  `).join('');
+  const container = document.getElementById('fSubtaskList');
+  container.innerHTML = '';
+  formSubs.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'subtask-item';
+    row.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;padding:10px 14px;';
+
+    const input = document.createElement('input');
+    input.className = 'subtask-edit';
+    input.value = s.text;
+    input.style.cssText = 'flex:1;background:transparent;border:none;color:var(--text);font-size:14px;outline:none;';
+    input.addEventListener('change', function() { updateFormSub(i, this.value); });
+
+    const del = document.createElement('button');
+    del.className = 'subtask-del';
+    del.textContent = '\u2715';
+    del.addEventListener('click', function() { delFormSub(i); });
+
+    row.appendChild(input);
+    row.appendChild(del);
+    container.appendChild(row);
+  });
 }
 
 function addFormSub() {
