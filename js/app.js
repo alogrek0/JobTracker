@@ -415,3 +415,14 @@ document.getElementById('importBtn').addEventListener('click', doImport);
 // ===== INIT =====
 state.load();
 render();
+
+// Re-render calendars on resize/orientation so they stay responsive
+var _calTimer;
+window.addEventListener('resize', function () {
+  clearTimeout(_calTimer);
+  _calTimer = setTimeout(renderMiniCals, 100);
+});
+window.addEventListener('orientationchange', function () {
+  clearTimeout(_calTimer);
+  _calTimer = setTimeout(renderMiniCals, 150);
+});

@@ -71,14 +71,14 @@ body {
 .header {
   padding: 8px 0 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 .header-left {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   flex-shrink: 0;
 }
 .header h1 {
@@ -98,14 +98,18 @@ body {
   border-radius: 100px;
   letter-spacing: 0.2px;
   font-variant-numeric: tabular-nums;
+  align-self: flex-start;
 }
 .stat-pill span { color: var(--accent); font-weight: 600; }
 
-/* Mini calendars — rendered via canvas for pixel-perfect sizing */
+/* Mini calendars — rendered via canvas, sized responsively */
 .mini-cals {
   display: flex;
   gap: 10px;
   align-items: flex-end;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
 }
 .mini-cals canvas {
   display: block;

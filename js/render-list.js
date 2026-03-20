@@ -10,10 +10,21 @@ export function renderMiniCals() {
   var todayStr = toDateStr(now);
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var dow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  var cellW = 15, cellH = 13, headerH = 14, dowH = 11;
-  var calW = cellW * 7;
   var container = document.getElementById('miniCals');
   container.innerHTML = '';
+
+  // Derive cell size from available container width
+  var gap = 10; // matches CSS gap on .mini-cals
+  var availW = container.offsetWidth;
+  if (availW < 20) availW = 220; // fallback if not laid out yet
+  var calW = Math.floor((availW - gap) / 2);
+  var cellW = Math.floor(calW / 7);
+  calW = cellW * 7; // snap to whole cells
+  var cellH = Math.round(cellW * 0.87);
+  var headerH = Math.round(cellW * 0.93);
+  var dowH = Math.round(cellW * 0.73);
+  var fontSize = Math.max(5.5, cellW * 0.53);
+  var fontSizeHead = Math.max(6, cellW * 0.56);
 
   var maxRows = 0;
   for (var p = 0; p < 2; p++) {
@@ -37,13 +48,13 @@ export function renderMiniCals() {
     var ctx = c.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    ctx.font = '600 8px Geist, sans-serif';
+    ctx.font = '600 ' + fontSizeHead + 'px Geist, sans-serif';
     ctx.fillStyle = '#9e9e94';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
 
-    ctx.font = '600 7.5px Geist, sans-serif';
+    ctx.font = '600 ' + fontSize + 'px Geist, sans-serif';
     ctx.fillStyle = '#666660';
     for (var i = 0; i < 7; i++) {
       ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
@@ -67,13 +78,13 @@ export function renderMiniCals() {
         ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 2);
         ctx.fill();
         ctx.fillStyle = '#121210';
-        ctx.font = '700 8px Geist, sans-serif';
+        ctx.font = '700 ' + fontSize + 'px Geist, sans-serif';
       } else if (isWknd) {
         ctx.fillStyle = 'rgba(212,168,67,0.4)';
-        ctx.font = '400 7.5px Geist, sans-serif';
+        ctx.font = '400 ' + fontSize + 'px Geist, sans-serif';
       } else {
         ctx.fillStyle = '#9e9e94';
-        ctx.font = '400 7.5px Geist, sans-serif';
+        ctx.font = '400 ' + fontSize + 'px Geist, sans-serif';
       }
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
