@@ -10,7 +10,7 @@ export function renderMiniCals() {
   var todayStr = toDateStr(now);
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var dow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  var cellW = 10, cellH = 9, headerH = 10, dowH = 8;
+  var cellW = 15, cellH = 13, headerH = 14, dowH = 11;
   var calW = cellW * 7;
   var container = document.getElementById('miniCals');
   container.innerHTML = '';
@@ -37,13 +37,13 @@ export function renderMiniCals() {
     var ctx = c.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    ctx.font = '600 6px Geist, sans-serif';
+    ctx.font = '600 8px Geist, sans-serif';
     ctx.fillStyle = '#9e9e94';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
 
-    ctx.font = '600 5.5px Geist, sans-serif';
+    ctx.font = '600 7.5px Geist, sans-serif';
     ctx.fillStyle = '#666660';
     for (var i = 0; i < 7; i++) {
       ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
@@ -64,16 +64,16 @@ export function renderMiniCals() {
       if (isToday) {
         ctx.fillStyle = '#d4a843';
         ctx.beginPath();
-        ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 1.5);
+        ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 2);
         ctx.fill();
         ctx.fillStyle = '#121210';
-        ctx.font = '700 6px Geist, sans-serif';
+        ctx.font = '700 8px Geist, sans-serif';
       } else if (isWknd) {
         ctx.fillStyle = 'rgba(212,168,67,0.4)';
-        ctx.font = '400 5.5px Geist, sans-serif';
+        ctx.font = '400 7.5px Geist, sans-serif';
       } else {
         ctx.fillStyle = '#9e9e94';
-        ctx.font = '400 5.5px Geist, sans-serif';
+        ctx.font = '400 7.5px Geist, sans-serif';
       }
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

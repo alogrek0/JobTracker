@@ -104,7 +104,7 @@ body {
 /* Mini calendars — rendered via canvas for pixel-perfect sizing */
 .mini-cals {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   align-items: flex-end;
 }
 .mini-cals canvas {
