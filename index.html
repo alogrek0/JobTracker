@@ -1136,15 +1136,22 @@ function startInlineEdit(tid, idx, el) {
   el.classList.add('editing');
   input.focus();
 
+  let committed = false;
   function commitEdit() {
+    if (committed) return;
+    committed = true;
     const val = input.value.trim();
     if (val && val !== original) {
       t.subtasks[idx].text = val;
       save();
     }
+    stepEditMode = false;
     renderDetail();
   }
   function cancelEdit() {
+    if (committed) return;
+    committed = true;
+    stepEditMode = false;
     renderDetail();
   }
 
