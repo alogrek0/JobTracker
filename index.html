@@ -95,67 +95,14 @@ body {
 }
 .stat-pill span { color: var(--accent); }
 
-/* Mini calendars */
-.mini-cals-wrap {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  overflow: hidden;
-  min-width: 0;
-}
+/* Mini calendars — rendered via canvas for pixel-perfect sizing */
 .mini-cals {
   display: flex;
-  gap: 8px;
-  transform: scale(0.38);
-  transform-origin: center bottom;
+  gap: 2px;
+  align-items: flex-end;
 }
-.mini-cal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.mini-cal-month {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-mid);
-  margin-bottom: 2px;
-}
-.mini-cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 20px);
-  gap: 0;
-}
-.mini-cal-dow {
-  height: 14px;
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text-dim);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-transform: uppercase;
-}
-.mini-cal-day {
-  height: 18px;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text-mid);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-}
-.mini-cal-day.empty { visibility: hidden; }
-.mini-cal-day.wknd { color: var(--accent); opacity: 0.5; }
-.mini-cal-day.today {
-  background: var(--accent);
-  color: var(--bg);
-  font-weight: 700;
-  border-radius: 4px;
-  opacity: 1;
+.mini-cals canvas {
+  display: block;
 }
 
 /* Weekend Section */
@@ -784,7 +731,7 @@ body {
   <div class="app">
     <div class="header">
       <h1>Home Tasks</h1>
-      <div class="mini-cals-wrap"><div class="mini-cals" id="miniCals"></div></div>
+      <div class="mini-cals" id="miniCals"></div>
       <div class="stat-pill" id="taskCount"></div>
     </div>
 
@@ -1092,30 +1039,78 @@ function updateFormSub(idx, text) {
 
 // ===== RENDERING: MAIN LIST =====
 function renderMiniCals() {
+  var dpr = window.devicePixelRatio || 1;
   var now = new Date();
   var todayStr = toDateStr(now);
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dow = ['S','M','T','W','T','F','S'];
-  var html = '';
+  var cellW = 8, cellH = 7, headerH = 8, dowH = 6, gap = 1;
+  var calW = cellW * 7;
+  var container = document.getElementById('miniCals');
+  container.innerHTML = '';
+
   for (var m = 0; m < 2; m++) {
     var d = new Date(now.getFullYear(), now.getMonth() + m, 1);
-    var label = months[d.getMonth()];
     var firstDay = d.getDay();
     var daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    html += '<div class="mini-cal"><div class="mini-cal-month">' + label + '</div><div class="mini-cal-grid">';
-    for (var i = 0; i < 7; i++) html += '<div class="mini-cal-dow">' + dow[i] + '</div>';
-    for (var i = 0; i < firstDay; i++) html += '<div class="mini-cal-day empty"></div>';
+    var rows = Math.ceil((firstDay + daysInMonth) / 7);
+    var calH = headerH + dowH + rows * cellH;
+
+    var c = document.createElement('canvas');
+    c.width = calW * dpr;
+    c.height = calH * dpr;
+    c.style.width = calW + 'px';
+    c.style.height = calH + 'px';
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // Month label
+    ctx.font = '600 5px Geist, sans-serif';
+    ctx.fillStyle = '#9e9e94';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(months[d.getMonth()].toUpperCase(), calW / 2, headerH / 2);
+
+    // DOW headers
+    ctx.font = '600 4px Geist, sans-serif';
+    ctx.fillStyle = '#666660';
+    for (var i = 0; i < 7; i++) {
+      ctx.fillText(dow[i], i * cellW + cellW / 2, headerH + dowH / 2);
+    }
+
+    // Day numbers
+    var topOffset = headerH + dowH;
     for (var day = 1; day <= daysInMonth; day++) {
       var dd = new Date(d.getFullYear(), d.getMonth(), day);
       var dayOfWeek = dd.getDay();
-      var cls = 'mini-cal-day';
-      if (dayOfWeek === 0 || dayOfWeek === 6) cls += ' wknd';
-      if (toDateStr(dd) === todayStr) cls += ' today';
-      html += '<div class="' + cls + '">' + day + '</div>';
+      var idx = firstDay + day - 1;
+      var col = idx % 7;
+      var row = Math.floor(idx / 7);
+      var cx = col * cellW + cellW / 2;
+      var cy = topOffset + row * cellH + cellH / 2;
+      var isToday = toDateStr(dd) === todayStr;
+      var isWknd = dayOfWeek === 0 || dayOfWeek === 6;
+
+      if (isToday) {
+        ctx.fillStyle = '#d4a843';
+        ctx.beginPath();
+        ctx.roundRect(col * cellW + 1, topOffset + row * cellH + 0.5, cellW - 2, cellH - 1, 1.5);
+        ctx.fill();
+        ctx.fillStyle = '#121210';
+        ctx.font = '700 5px Geist, sans-serif';
+      } else if (isWknd) {
+        ctx.fillStyle = 'rgba(212,168,67,0.4)';
+        ctx.font = '400 4.5px Geist, sans-serif';
+      } else {
+        ctx.fillStyle = '#9e9e94';
+        ctx.font = '400 4.5px Geist, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(day), cx, cy);
     }
-    html += '</div></div>';
+    container.appendChild(c);
   }
-  document.getElementById('miniCals').innerHTML = html;
 }
 
 function render() {
