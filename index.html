@@ -15,18 +15,18 @@
 <style>
 
 :root {
-  --bg: #111110;
-  --bg2: #191918;
-  --surface: #1e1e1c;
-  --surface-up: #262624;
-  --border: #2c2c29;
-  --border-light: #3a3a36;
-  --text: #e5e5e0;
-  --text-mid: #a0a098;
+  --bg: #121210;
+  --bg2: #1a1a17;
+  --surface: #1d1d1a;
+  --surface-up: #272722;
+  --border: #2a2a26;
+  --border-light: #383832;
+  --text: #e8e8e2;
+  --text-mid: #9e9e94;
   --text-dim: #666660;
   --accent: #d4a843;
-  --accent-dim: rgba(212, 168, 67, 0.12);
-  --accent-glow: rgba(212, 168, 67, 0.25);
+  --accent-dim: rgba(212, 168, 67, 0.08);
+  --accent-glow: rgba(212, 168, 67, 0.15);
   --high: #e05252;
   --high-bg: rgba(224, 82, 82, 0.1);
   --med: #d4a843;
@@ -38,9 +38,17 @@
   --safe-top: env(safe-area-inset-top, 20px);
   --safe-bottom: env(safe-area-inset-bottom, 20px);
   --font: 'Geist', -apple-system, sans-serif;
+  --transition: 120ms ease;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
 body {
   font-family: var(--font);
@@ -69,9 +77,9 @@ body {
   align-items: flex-end;
 }
 .header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.8px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
   color: var(--text);
 }
 .stat-pill {
@@ -90,7 +98,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   color: var(--accent);
   margin-bottom: 10px;
   display: flex;
@@ -105,37 +113,39 @@ body {
 }
 
 /* Task Cards */
-.task-list { display: flex; flex-direction: column; gap: 4px; }
+.task-list { display: flex; flex-direction: column; gap: 6px; }
 
 .task-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px 16px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.03);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s;
-  animation: fadeUp 0.25s ease backwards;
+  transition: all var(--transition);
+  animation: fadeUp 150ms ease backwards;
   position: relative;
 }
-.task-card:active { background: var(--surface-up); }
+.task-card:active { background: var(--surface-up); transform: scale(0.995); }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
 }
 
 .task-check {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  padding: 10px;
+  margin: -10px;
   border: 2px solid var(--border-light);
   border-radius: 6px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition);
   z-index: 2;
 }
 .task-check.checked {
@@ -154,7 +164,7 @@ body {
 .task-info { flex: 1; min-width: 0; }
 .task-title {
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -186,23 +196,23 @@ body {
 .task-subtask-count span { color: var(--accent); }
 
 .task-priority-bar {
-  width: 4px;
-  height: 28px;
+  width: 3px;
+  height: 24px;
   border-radius: 2px;
   flex-shrink: 0;
 }
 .task-priority-bar.high { background: var(--high); }
 .task-priority-bar.med { background: var(--med); }
-.task-priority-bar.low { background: var(--low); opacity: 0.5; }
+.task-priority-bar.low { background: var(--low); opacity: 0.35; }
 
 /* Empty state */
 .empty {
   text-align: center;
-  padding: 50px 20px;
+  padding: 60px 20px;
   color: var(--text-dim);
 }
 .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
-.empty p { font-size: 14px; font-weight: 300; }
+.empty p { font-size: 14px; font-weight: 400; }
 
 /* Add Button (FAB) */
 .fab {
@@ -222,10 +232,10 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 24px var(--accent-glow);
-  transition: all 0.15s;
+  transition: all var(--transition);
   z-index: 20;
 }
-.fab:active { transform: scale(0.92); }
+.fab:active { transform: scale(0.93); }
 
 /* ====== DETAIL VIEW ====== */
 .detail-view {
@@ -249,18 +259,18 @@ body {
   font-family: var(--font);
   font-size: 13px;
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .back-btn:active { background: var(--surface-up); }
 .del-btn { color: var(--high); border-color: rgba(224,82,82,0.2); }
 .del-btn:active { background: var(--high-bg); }
 
 .job-title {
-  font-size: 24px;
-  font-weight: 650;
+  font-size: 22px;
+  font-weight: 600;
   letter-spacing: -0.5px;
   margin-bottom: 20px;
   line-height: 1.25;
@@ -291,10 +301,10 @@ body {
   font-family: var(--font);
   font-size: 12px;
   font-weight: 500;
-  padding: 6px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .edit-btn:active { background: var(--accent-dim); opacity: 0.8; }
 
@@ -305,7 +315,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   color: var(--text-dim);
   margin-bottom: 14px;
 }
@@ -319,7 +329,7 @@ body {
   padding: 16px 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .subtask-item:last-child { border-bottom: none; }
 .subtask-item:active { opacity: 0.7; }
@@ -332,7 +342,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 .subtask-check.checked { background: var(--accent); border-color: var(--accent); }
 .subtask-check.checked::after {
@@ -376,7 +386,7 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
   margin-top: 8px;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .mark-done-btn:active { background: var(--surface-up); }
 .subtask-del {
@@ -387,7 +397,7 @@ body {
   cursor: pointer;
   padding: 2px;
   opacity: 0.5;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .subtask-del:hover { color: var(--high); opacity: 1; }
 
@@ -403,7 +413,7 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: 14px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius-sm);
   outline: none;
 }
@@ -416,7 +426,7 @@ body {
   font-family: var(--font);
   font-size: 13px;
   font-weight: 600;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
@@ -435,6 +445,7 @@ body {
   resize: vertical;
   min-height: 100px;
   line-height: 1.5;
+  caret-color: var(--accent);
 }
 .notes-area::placeholder { color: var(--text-dim); }
 .notes-area:focus { border-color: var(--accent); }
@@ -447,12 +458,12 @@ body {
   min-height: 100dvh;
 }
 
-.form-group { margin-bottom: 20px; }
+.form-group { margin-bottom: 24px; }
 .form-label {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   color: var(--text-dim);
   margin-bottom: 8px;
   display: block;
@@ -468,7 +479,8 @@ body {
   padding: 14px 16px;
   border-radius: var(--radius);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
+  caret-color: var(--accent);
 }
 .form-input:focus { border-color: var(--accent); }
 .form-input::placeholder { color: var(--text-dim); font-weight: 300; }
@@ -483,13 +495,13 @@ body {
   font-family: var(--font);
   font-size: 13px;
   font-weight: 500;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-dim);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .cat-option.selected {
   background: var(--accent-dim);
@@ -504,14 +516,14 @@ body {
   font-family: var(--font);
   font-size: 13px;
   font-weight: 600;
-  padding: 12px;
+  padding: 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-dim);
   cursor: pointer;
   text-align: center;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .pri-option.selected.high { background: var(--high-bg); border-color: rgba(224,82,82,0.4); color: var(--high); }
 .pri-option.selected.med { background: var(--med-bg); border-color: rgba(212,168,67,0.4); color: var(--med); }
@@ -538,7 +550,7 @@ body {
   background: var(--border);
   border-radius: 13px;
   position: relative;
-  transition: background 0.2s;
+  transition: background var(--transition);
 }
 .toggle-switch.on { background: var(--accent); }
 .toggle-switch::after {
@@ -550,7 +562,7 @@ body {
   position: absolute;
   top: 3px;
   left: 3px;
-  transition: transform 0.2s;
+  transition: transform var(--transition);
 }
 .toggle-switch.on::after { transform: translateX(18px); }
 
@@ -567,17 +579,20 @@ body {
   border-radius: var(--radius);
   cursor: pointer;
   margin-top: 24px;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .save-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+.form-title { font-size: 16px; font-weight: 600; }
+.form-delete-btn { width: 100%; text-align: center; margin-top: 12px; padding: 14px; border-radius: var(--radius); }
 
 /* ====== CONFIRM DIALOG ====== */
 .overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
   z-index: 100;
   align-items: center;
   justify-content: center;
@@ -588,8 +603,9 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 28px 24px;
   max-width: 320px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
   width: 100%;
   text-align: center;
 }
@@ -600,11 +616,11 @@ body {
   font-family: var(--font);
   font-size: 14px;
   font-weight: 600;
-  padding: 12px;
+  padding: 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   border: 1px solid var(--border);
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 .dialog-cancel { background: var(--surface-up); color: var(--text-mid); }
 .dialog-confirm { background: var(--high-bg); border-color: rgba(224,82,82,0.3); color: var(--high); }
@@ -644,7 +660,7 @@ body {
   <div class="form-view">
     <div class="detail-nav">
       <button class="back-btn" onclick="cancelForm()">← Cancel</button>
-      <div id="formTitle" style="font-size:16px;font-weight:600;">New Task</div>
+      <div id="formTitle" class="form-title">New Task</div>
       <div style="width:70px"></div>
     </div>
 
@@ -702,7 +718,7 @@ body {
     <button class="save-btn" onclick="saveTask()">Save Task</button>
 
     <!-- Delete (edit mode only) -->
-    <button class="del-btn" id="fDeleteBtn" style="display:none;width:100%;text-align:center;margin-top:12px;padding:14px;border-radius:var(--radius)" onclick="confirmDelete()">Delete Task</button>
+    <button class="del-btn form-delete-btn" id="fDeleteBtn" style="display:none" onclick="confirmDelete()">Delete Task</button>
   </div>
 </div>
 
@@ -911,7 +927,7 @@ function cardHtml(t) {
   const subStr = subTotal > 0 ? `<span class="task-subtask-count"><span>${subDone}</span>/${subTotal}</span>` : '';
 
   return `
-    <div class="task-card ${t.done?'done':''}" style="animation-delay:${Math.random()*80}ms">
+    <div class="task-card ${t.done?'done':''}" style="animation-delay:${Math.random()*50}ms">
       <div class="task-check ${t.done?'checked':''}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
       <div class="task-info" onclick="showDetail('${t.id}')">
         <div class="task-title">${esc(t.title)}</div>
