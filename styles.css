@@ -23,15 +23,6 @@
   --safe-bottom: env(safe-area-inset-bottom, 20px);
   --font: 'Geist', -apple-system, sans-serif;
   --transition: 120ms ease;
-
-  /* Subtle depth tokens */
-  --task-edge-outer: rgba(255, 255, 255, 0.045);
-  --task-edge-inner-top: rgba(255, 255, 255, 0.055);
-  --task-edge-inner-bottom: rgba(0, 0, 0, 0.18);
-  --task-shadow-rest: 0 1px 0 rgba(255,255,255,0.02), 0 8px 18px rgba(0,0,0,0.14);
-  --task-shadow-active: 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0,0,0,0.22);
-  --task-glow: rgba(255,255,255,0.045);
-  --task-shimmer: rgba(255,255,255,0.07);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -148,96 +139,16 @@ body {
 .task-list { display: flex; flex-direction: column; gap: 6px; }
 
 .task-card {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 13px 16px;
   background: var(--surface);
-  border: 1px solid var(--task-edge-outer);
+  border: 1px solid rgba(255,255,255,0.03);
   border-radius: 8px;
-  overflow: hidden;
-  isolation: isolate;
-  transition:
-    border-color 160ms ease,
-    box-shadow 180ms ease,
-    transform 140ms ease,
-    background-color 160ms ease;
+  transition: all var(--transition);
   animation: fadeUp 150ms ease backwards;
-  box-shadow: var(--task-shadow-rest);
-}
-
-/* soft inner edge for depth */
-.task-card::before {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: 7px;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      to bottom,
-      var(--task-edge-inner-top) 0%,
-      rgba(255,255,255,0.015) 22%,
-      rgba(255,255,255,0) 45%,
-      rgba(0,0,0,0.03) 72%,
-      var(--task-edge-inner-bottom) 100%
-    );
-  opacity: 0.95;
-}
-
-/* localized shimmer strip; off by default */
-.task-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0;
-  transform: translateX(-18%);
-  background:
-    linear-gradient(
-      100deg,
-      transparent 0%,
-      transparent 38%,
-      var(--task-shimmer) 50%,
-      transparent 62%,
-      transparent 100%
-    );
-  transition:
-    opacity 140ms ease,
-    transform 240ms ease;
-}
-
-/* interaction states */
-.task-card:focus-within {
-  border-color: rgba(255,255,255,0.075);
-  box-shadow:
-    var(--task-shadow-active),
-    0 0 0 1px rgba(255,255,255,0.015),
-    0 0 18px var(--task-glow);
-}
-
-.task-card:active {
-  transform: translateY(1px) scale(0.997);
-  border-color: rgba(255,255,255,0.07);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.02),
-    0 6px 14px rgba(0,0,0,0.18);
-}
-
-.task-card:focus-within::after,
-.task-card:active::after {
-  opacity: 1;
-  transform: translateX(10%);
-}
-
-/* optional: stronger state for emphasized card */
-.task-card.is-emphasized {
-  border-color: rgba(255,255,255,0.085);
-  box-shadow:
-    var(--task-shadow-active),
-    0 0 0 1px rgba(255,255,255,0.02);
+  position: relative;
 }
 
 @keyframes fadeUp {
@@ -256,34 +167,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    transform 120ms ease,
-    box-shadow 140ms ease;
+  transition: all var(--transition);
   z-index: 2;
   background: none;
   cursor: pointer;
   color: inherit;
-}
-
-.task-check:active {
-  transform: scale(0.96);
-}
-
-/* accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .task-card,
-  .task-card::after,
-  .task-check {
-    transition: none;
-  }
-  .task-card:active {
-    transform: none;
-  }
-  .task-card::after {
-    display: none;
-  }
 }
 .task-check.checked {
   background: var(--accent);
