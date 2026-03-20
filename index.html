@@ -1043,18 +1043,25 @@ function renderMiniCals() {
   var now = new Date();
   var todayStr = toDateStr(now);
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var dow = ['S','M','T','W','T','F','S'];
+  var dow = ['M','T','W','T','F','S','S'];
   var cellW = 8, cellH = 7, headerH = 8, dowH = 6, gap = 1;
   var calW = cellW * 7;
   var container = document.getElementById('miniCals');
   container.innerHTML = '';
 
+  var maxRows = 0;
+  for (var p = 0; p < 2; p++) {
+    var dp = new Date(now.getFullYear(), now.getMonth() + p, 1);
+    var fd = (dp.getDay() + 6) % 7;
+    var dim = new Date(dp.getFullYear(), dp.getMonth() + 1, 0).getDate();
+    maxRows = Math.max(maxRows, Math.ceil((fd + dim) / 7));
+  }
+
   for (var m = 0; m < 2; m++) {
     var d = new Date(now.getFullYear(), now.getMonth() + m, 1);
-    var firstDay = d.getDay();
+    var firstDay = (d.getDay() + 6) % 7;
     var daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    var rows = Math.ceil((firstDay + daysInMonth) / 7);
-    var calH = headerH + dowH + rows * cellH;
+    var calH = headerH + dowH + maxRows * cellH;
 
     var c = document.createElement('canvas');
     c.width = calW * dpr;
