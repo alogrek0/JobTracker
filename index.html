@@ -81,6 +81,7 @@ body {
   font-weight: 600;
   letter-spacing: -0.6px;
   color: var(--text);
+  flex-shrink: 0;
 }
 .stat-pill {
   font-size: 12px;
@@ -90,8 +91,69 @@ body {
   border: 1px solid var(--border);
   padding: 6px 12px;
   border-radius: 100px;
+  flex-shrink: 0;
 }
 .stat-pill span { color: var(--accent); }
+
+/* Mini calendars */
+.mini-cals {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex: 1;
+  justify-content: center;
+  padding: 0 8px;
+  overflow: hidden;
+}
+.mini-cal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mini-cal-month {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-bottom: 1px;
+}
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+.mini-cal-dow {
+  width: 14px;
+  height: 10px;
+  font-size: 6px;
+  font-weight: 600;
+  color: var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+.mini-cal-day {
+  width: 14px;
+  height: 13px;
+  font-size: 7px;
+  font-weight: 400;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+.mini-cal-day.empty { visibility: hidden; }
+.mini-cal-day.wknd { color: var(--text-mid); }
+.mini-cal-day.today {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  border-radius: 3px;
+}
 
 /* Weekend Section */
 .section-label {
@@ -719,6 +781,7 @@ body {
   <div class="app">
     <div class="header">
       <h1>Home Tasks</h1>
+      <div class="mini-cals" id="miniCals"></div>
       <div class="stat-pill" id="taskCount"></div>
     </div>
 
@@ -1025,7 +1088,35 @@ function updateFormSub(idx, text) {
 }
 
 // ===== RENDERING: MAIN LIST =====
+function renderMiniCals() {
+  var now = new Date();
+  var todayStr = toDateStr(now);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dow = ['S','M','T','W','T','F','S'];
+  var html = '';
+  for (var m = 0; m < 2; m++) {
+    var d = new Date(now.getFullYear(), now.getMonth() + m, 1);
+    var label = months[d.getMonth()];
+    var firstDay = d.getDay();
+    var daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    html += '<div class="mini-cal"><div class="mini-cal-month">' + label + '</div><div class="mini-cal-grid">';
+    for (var i = 0; i < 7; i++) html += '<div class="mini-cal-dow">' + dow[i] + '</div>';
+    for (var i = 0; i < firstDay; i++) html += '<div class="mini-cal-day empty"></div>';
+    for (var day = 1; day <= daysInMonth; day++) {
+      var dd = new Date(d.getFullYear(), d.getMonth(), day);
+      var dayOfWeek = dd.getDay();
+      var cls = 'mini-cal-day';
+      if (dayOfWeek === 0 || dayOfWeek === 6) cls += ' wknd';
+      if (toDateStr(dd) === todayStr) cls += ' today';
+      html += '<div class="' + cls + '">' + day + '</div>';
+    }
+    html += '</div></div>';
+  }
+  document.getElementById('miniCals').innerHTML = html;
+}
+
 function render() {
+  renderMiniCals();
   renderTaskList();
   const active = tasks.filter(t => !t.done).length;
   document.getElementById('taskCount').innerHTML = `<span>${active}</span> / ${tasks.length}`;
