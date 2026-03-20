@@ -628,6 +628,74 @@ body {
 .dialog-cancel { background: var(--surface-up); color: var(--text-mid); }
 .dialog-confirm { background: var(--high-bg); border-color: rgba(224,82,82,0.3); color: var(--high); }
 
+/* ====== STEP EDIT MODE ====== */
+.step-edit-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.step-edit-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.step-edit-btn:active { opacity: 0.8; }
+
+.subtask-item.edit-mode {
+  position: relative;
+  border-bottom-color: transparent;
+  border-radius: 8px;
+  padding: 16px 10px;
+  margin: 0 -10px;
+  cursor: text;
+}
+.subtask-item.edit-mode::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  padding: 1px;
+  background: conic-gradient(from var(--border-angle, 0deg), transparent 0%, transparent 60%, var(--accent) 78%, transparent 96%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: borderSpin 2.5s linear infinite;
+  pointer-events: none;
+}
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes borderSpin {
+  to { --border-angle: 360deg; }
+}
+
+.subtask-item.edit-mode:active { opacity: 1; }
+
+.subtask-inline-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.35;
+  outline: none;
+  padding: 0;
+  caret-color: var(--accent);
+}
+
 @media (hover: none) {
   .subtask-del { opacity: 0.7; }
 }
@@ -745,6 +813,7 @@ const CATEGORIES = [
 
 let tasks = [];
 let currentTaskId = null;
+let stepEditMode = false;
 
 // Form state
 let formPri = 'low';
@@ -779,6 +848,7 @@ function showView(id) {
 }
 
 function showList() {
+  stepEditMode = false;
   showView('viewList');
   render();
 }
@@ -960,7 +1030,10 @@ function renderDetail() {
       ${t.weekend ? '<span class="badge badge-weekend">⚡ Weekend</span>' : ''}
       ${t.nextWeekend ? '<span class="badge badge-weekend">📅 Next Weekend</span>' : ''}
     </div>
-    <button class="edit-btn" onclick="showForm('${t.id}')" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="step-edit-btn ${stepEditMode?'active':''}" onclick="toggleStepEdit()">Edit</button>
+      <button class="edit-btn" onclick="showForm('${t.id}')" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
   `;
 
   // Content: Job title + Steps
@@ -975,7 +1048,7 @@ function renderDetail() {
       ${hasSubtasks ? `
         <div class="subtask-list">
           ${(t.subtasks || []).map((s, i) => `
-            <div class="subtask-item ${s.done?'done':''}" onclick="toggleSub('${t.id}',${i})">
+            <div class="subtask-item ${s.done?'done':''} ${stepEditMode?'edit-mode':''}" onclick="${stepEditMode ? `startInlineEdit('${t.id}',${i},this)` : `toggleSub('${t.id}',${i})`}" data-sub-idx="${i}">
               <div class="subtask-check ${s.done?'checked':''}"></div>
               <span class="subtask-text">${esc(s.text)}</span>
             </div>
@@ -1031,6 +1104,43 @@ function toggleSub(tid, idx) {
     save();
     renderDetail();
   }
+}
+
+function toggleStepEdit() {
+  stepEditMode = !stepEditMode;
+  renderDetail();
+}
+
+function startInlineEdit(tid, idx, el) {
+  if (el.querySelector('.subtask-inline-input')) return;
+  const t = tasks.find(t => t.id === tid);
+  if (!t || !t.subtasks[idx]) return;
+  const span = el.querySelector('.subtask-text');
+  const original = t.subtasks[idx].text;
+  const input = document.createElement('input');
+  input.className = 'subtask-inline-input';
+  input.value = original;
+  span.replaceWith(input);
+  input.focus();
+
+  function commitEdit() {
+    const val = input.value.trim();
+    if (val && val !== original) {
+      t.subtasks[idx].text = val;
+      save();
+    }
+    renderDetail();
+  }
+  function cancelEdit() {
+    renderDetail();
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+  });
+  input.addEventListener('blur', commitEdit);
+  el.onclick = null;
 }
 
 function confirmDelete() {
