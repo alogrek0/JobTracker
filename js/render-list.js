@@ -5,39 +5,93 @@ import { esc, catLabel, formatMinutes } from './utils.js';
 import { toDateStr, getWeekendLabel } from './weekends.js';
 
 export function renderMiniCals() {
+  var dpr = window.devicePixelRatio || 1;
   var now = new Date();
   var todayStr = toDateStr(now);
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var dow = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   var container = document.getElementById('miniCals');
-  var html = '';
+  container.innerHTML = '';
+
+  // Derive cell size from available container width
+  var gap = 10; // matches CSS gap on .mini-cals
+  var availW = container.offsetWidth;
+  if (availW < 20) availW = 220; // fallback if not laid out yet
+  var calW = Math.floor((availW - gap) / 2);
+  var cellW = Math.floor(calW / 7);
+  calW = cellW * 7; // snap to whole cells
+  var cellH = Math.round(cellW * 0.87);
+  var headerH = Math.round(cellW * 0.93);
+  var dowH = Math.round(cellW * 0.73);
+  var fontSize = Math.round(Math.max(6, cellW * 0.53));
+  var fontSizeHead = Math.round(Math.max(6, cellW * 0.56));
+
+  var maxRows = 0;
+  for (var p = 0; p < 2; p++) {
+    var dp = new Date(now.getFullYear(), now.getMonth() + p, 1);
+    var fd = (dp.getDay() + 6) % 7;
+    var dim = new Date(dp.getFullYear(), dp.getMonth() + 1, 0).getDate();
+    maxRows = Math.max(maxRows, Math.ceil((fd + dim) / 7));
+  }
 
   for (var m = 0; m < 2; m++) {
     var d = new Date(now.getFullYear(), now.getMonth() + m, 1);
     var firstDay = (d.getDay() + 6) % 7;
     var daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    var calH = headerH + dowH + maxRows * cellH;
 
-    html += '<div class="mini-cal"><div class="mini-cal-month">' + months[d.getMonth()].toUpperCase() + '</div>';
-    html += '<table><thead><tr>';
-    for (var i = 0; i < 7; i++) html += '<th>' + dow[i] + '</th>';
-    html += '</tr></thead><tbody><tr>';
+    var c = document.createElement('canvas');
+    c.width = calW * dpr;
+    c.height = calH * dpr;
+    c.style.width = calW + 'px';
+    c.style.height = calH + 'px';
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
 
-    for (var blank = 0; blank < firstDay; blank++) html += '<td></td>';
+    ctx.font = '600 ' + fontSizeHead + 'px Geist, sans-serif';
+    ctx.fillStyle = '#9e9e94';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(months[d.getMonth()].toUpperCase(), Math.round(calW / 2), Math.round(headerH / 2));
 
+    ctx.font = '600 ' + fontSize + 'px Geist, sans-serif';
+    ctx.fillStyle = '#666660';
+    for (var i = 0; i < 7; i++) {
+      ctx.fillText(dow[i], Math.round(i * cellW + cellW / 2), Math.round(headerH + dowH / 2));
+    }
+
+    var topOffset = headerH + dowH;
     for (var day = 1; day <= daysInMonth; day++) {
       var dd = new Date(d.getFullYear(), d.getMonth(), day);
       var dayOfWeek = dd.getDay();
-      var col = (firstDay + day - 1) % 7;
+      var idx = firstDay + day - 1;
+      var col = idx % 7;
+      var row = Math.floor(idx / 7);
+      var cx = Math.round(col * cellW + cellW / 2);
+      var cy = Math.round(topOffset + row * cellH + cellH / 2);
       var isToday = toDateStr(dd) === todayStr;
       var isWknd = dayOfWeek === 0 || dayOfWeek === 6;
-      var cls = isToday ? ' class="today"' : isWknd ? ' class="wknd"' : '';
-      html += '<td' + cls + '>' + day + '</td>';
-      if (col === 6 && day < daysInMonth) html += '</tr><tr>';
-    }
-    html += '</tr></tbody></table></div>';
-  }
 
-  container.innerHTML = html;
+      if (isToday) {
+        ctx.fillStyle = '#d4a843';
+        ctx.beginPath();
+        ctx.roundRect(Math.round(col * cellW + 1), Math.round(topOffset + row * cellH), cellW - 2, cellH - 1, 2);
+        ctx.fill();
+        ctx.fillStyle = '#121210';
+        ctx.font = '700 ' + fontSize + 'px Geist, sans-serif';
+      } else if (isWknd) {
+        ctx.fillStyle = 'rgba(212,168,67,0.4)';
+        ctx.font = '400 ' + fontSize + 'px Geist, sans-serif';
+      } else {
+        ctx.fillStyle = '#9e9e94';
+        ctx.font = '400 ' + fontSize + 'px Geist, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(day), cx, cy);
+    }
+    container.appendChild(c);
+  }
 }
 
 function cardHtml(t, budget) {
