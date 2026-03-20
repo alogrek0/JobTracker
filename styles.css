@@ -70,12 +70,12 @@ body {
   flex-shrink: 0;
 }
 .stat-pill {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--text-dim);
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  padding: 4px 9px;
   border-radius: 100px;
   flex-shrink: 0;
 }
