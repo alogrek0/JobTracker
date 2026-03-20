@@ -682,6 +682,16 @@ body {
 
 .subtask-item.edit-mode:active { opacity: 1; }
 
+.subtask-item.editing {
+  position: relative;
+  border-bottom-color: transparent;
+  border-radius: 8px;
+  padding: 16px 10px;
+  margin: 0 -10px;
+  border: 1px solid rgba(212,168,67,0.25);
+  background: rgba(212,168,67,0.03);
+}
+
 .subtask-inline-input {
   flex: 1;
   background: transparent;
@@ -1121,6 +1131,8 @@ function startInlineEdit(tid, idx, el) {
   input.className = 'subtask-inline-input';
   input.value = original;
   span.replaceWith(input);
+  el.classList.remove('edit-mode');
+  el.classList.add('editing');
   input.focus();
 
   function commitEdit() {
