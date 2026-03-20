@@ -131,7 +131,7 @@ function weekendBudgetHtml(wid, taskGroup) {
     var overClass = remaining < 0 ? ' budget-over' : '';
 
     // Main line: committed vs budget
-    html += `<span class="budget-bar${overClass}">${formatMinutes(planned.committed)} / ${formatMinutes(budget)}</span>`;
+    html += `<span class="budget-bar${overClass}">${planned.committed > 0 ? formatMinutes(planned.committed) : '0m'} / ${formatMinutes(budget)}</span>`;
 
     if (remaining < 0) {
       html += `<span class="budget-remaining budget-over">\u2212${formatMinutes(-remaining)} over</span>`;

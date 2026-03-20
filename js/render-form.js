@@ -99,7 +99,7 @@ export function renderFormBudget() {
   if (currentBudget && planned.total > 0) {
     var remaining = currentBudget - planned.committed;
     var cls = remaining < 0 ? 'budget-over' : 'budget-ok';
-    var text = 'Committed: ' + formatMinutes(planned.committed) + ' / ' + formatMinutes(currentBudget);
+    var text = 'Committed: ' + (planned.committed > 0 ? formatMinutes(planned.committed) : '0m') + ' / ' + formatMinutes(currentBudget);
     if (planned.stretch > 0) text += ' + ' + formatMinutes(planned.stretch) + ' stretch';
     summaryEl.innerHTML = '<span class="' + cls + '">' + text + '</span>';
     summaryEl.style.display = 'block';
