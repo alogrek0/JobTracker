@@ -139,16 +139,31 @@ body {
 .task-list { display: flex; flex-direction: column; gap: 6px; }
 
 .task-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 13px 16px;
   background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.03);
+  border: 1px solid rgba(255, 255, 255, 0.045);
   border-radius: 8px;
-  transition: all var(--transition);
+  transition: border-color 140ms ease;
   animation: fadeUp 150ms ease backwards;
-  position: relative;
+}
+
+.task-card::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 7px;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  opacity: 0.8;
+}
+
+.task-card:focus-within,
+.task-card:active {
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 @keyframes fadeUp {
