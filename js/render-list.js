@@ -199,7 +199,7 @@ export function renderTaskList() {
     if (stretch.length > 0) {
       wsHtml += `
         <div class="stretch-label">If time allows</div>
-        <div class="task-list" style="margin-bottom:20px">${stretch.map(t => cardHtml(t, budget)).join('')}</div>
+        <div class="task-list" style="margin-bottom:24px">${stretch.map(t => cardHtml(t, budget)).join('')}</div>
       `;
     }
   });
