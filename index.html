@@ -98,25 +98,25 @@ body {
 /* Mini calendars */
 .mini-cals {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   align-items: flex-end;
   flex: 1;
   justify-content: center;
-  padding: 0 8px;
+  padding: 0 6px;
   overflow: hidden;
 }
 .mini-cal {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 .mini-cal-month {
   font-size: 8px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-dim);
+  color: var(--text-mid);
   margin-bottom: 1px;
 }
 .mini-cal-grid {
@@ -125,34 +125,35 @@ body {
   gap: 0;
 }
 .mini-cal-dow {
-  width: 14px;
-  height: 10px;
+  width: 13px;
+  height: 9px;
   font-size: 6px;
   font-weight: 600;
-  color: var(--border-light);
+  color: var(--text-dim);
   display: flex;
   align-items: center;
   justify-content: center;
   text-transform: uppercase;
 }
 .mini-cal-day {
-  width: 14px;
-  height: 13px;
+  width: 13px;
+  height: 12px;
   font-size: 7px;
   font-weight: 400;
-  color: var(--text-dim);
+  color: var(--text-mid);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 2px;
 }
 .mini-cal-day.empty { visibility: hidden; }
-.mini-cal-day.wknd { color: var(--text-mid); }
+.mini-cal-day.wknd { color: var(--accent); opacity: 0.5; }
 .mini-cal-day.today {
   background: var(--accent);
   color: var(--bg);
   font-weight: 700;
   border-radius: 3px;
+  opacity: 1;
 }
 
 /* Weekend Section */
