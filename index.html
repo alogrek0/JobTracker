@@ -98,36 +98,35 @@ body {
 /* Mini calendars */
 .mini-cals {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: flex-end;
-  flex: 1;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 4px;
   overflow: hidden;
+  min-width: 0;
 }
 .mini-cal {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
 }
 .mini-cal-month {
-  font-size: 8px;
+  font-size: 6px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   color: var(--text-mid);
+  line-height: 1;
   margin-bottom: 1px;
 }
 .mini-cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, 9px);
   gap: 0;
 }
 .mini-cal-dow {
-  width: 13px;
-  height: 9px;
-  font-size: 6px;
+  height: 7px;
+  font-size: 4.5px;
   font-weight: 600;
   color: var(--text-dim);
   display: flex;
@@ -136,15 +135,14 @@ body {
   text-transform: uppercase;
 }
 .mini-cal-day {
-  width: 13px;
-  height: 12px;
-  font-size: 7px;
+  height: 8px;
+  font-size: 5.5px;
   font-weight: 400;
   color: var(--text-mid);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2px;
+  border-radius: 1px;
 }
 .mini-cal-day.empty { visibility: hidden; }
 .mini-cal-day.wknd { color: var(--accent); opacity: 0.5; }
@@ -152,7 +150,7 @@ body {
   background: var(--accent);
   color: var(--bg);
   font-weight: 700;
-  border-radius: 3px;
+  border-radius: 2px;
   opacity: 1;
 }
 
