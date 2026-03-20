@@ -54,22 +54,20 @@ body {
   min-height: 100dvh;
 }
 
-/* Change #2: Responsive two-row header on narrow screens */
+/* Header: title | calendars | pill */
 .header {
   padding: 1px 0 20px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
+  display: flex;
   align-items: center;
-  row-gap: 8px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
 }
 .header h1 {
   font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.6px;
   color: var(--text);
-  grid-column: 1;
-  grid-row: 1;
+  flex-shrink: 0;
 }
 .stat-pill {
   font-size: 12px;
@@ -79,9 +77,7 @@ body {
   border: 1px solid var(--border);
   padding: 6px 12px;
   border-radius: 100px;
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
+  flex-shrink: 0;
 }
 .stat-pill span { color: var(--accent); }
 
@@ -90,8 +86,6 @@ body {
   display: flex;
   gap: 6px;
   align-items: flex-end;
-  grid-column: 1 / -1;
-  grid-row: 2;
 }
 .mini-cals canvas {
   display: block;
