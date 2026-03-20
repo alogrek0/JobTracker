@@ -1016,7 +1016,7 @@ function cardHtml(t) {
       <div class="task-info" onclick="showDetail('${t.id}')">
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
-          <span class="task-cat-badge">${esc(t.category || 'Uncategorized')}</span>
+          <span class="task-cat-badge">${catLabel(t.category || 'Uncategorized','badge')}</span>
           ${subStr}
         </div>
       </div>
@@ -1036,7 +1036,7 @@ function renderDetail() {
   document.getElementById('detailNav').innerHTML = `
     <button class="back-btn" onclick="showList()">← Back</button>
     <div class="detail-badges">
-      <span class="badge badge-cat">${esc(t.category || 'Uncategorized')}</span>
+      <span class="badge badge-cat">${catLabel(t.category || 'Uncategorized','badge')}</span>
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
       ${t.weekend ? '<span class="badge badge-weekend">⚡ Weekend</span>' : ''}
       ${t.nextWeekend ? '<span class="badge badge-weekend">📅 Next Weekend</span>' : ''}
@@ -1179,7 +1179,7 @@ function doDelete() {
 // ===== FORM =====
 function renderFormCats() {
   document.getElementById('fCatGrid').innerHTML = CATEGORIES.map(c =>
-    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${catLabel(c)}</button>`
+    `<button class="cat-option ${formCat===c?'selected':''}" onclick="setFormCat('${c.replace(/'/g,"\\'")}')">${catLabel(c,'form')}</button>`
   ).join('');
 }
 function setFormCat(c) {
@@ -1251,7 +1251,10 @@ function saveTask() {
 
 // ===== UTILS =====
 const INSULATION_ICON = '<svg viewBox="0 0 24 24" width="20" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="3" y="4" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="3" y="10.25" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.55"/><rect x="3" y="16.5" width="18" height="3.5" rx="1.5" fill="currentColor" opacity="0.25"/></svg>';
-function catLabel(c) { return c === 'Insulation' ? INSULATION_ICON : c; }
+function catLabel(c, mode) {
+  if (c !== 'Insulation') return mode === 'form' ? c : esc(c);
+  return mode === 'form' ? INSULATION_ICON + ' Insulation' : INSULATION_ICON + ' Insul.';
+}
 
 function esc(s) {
   const d = document.createElement('div');
