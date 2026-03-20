@@ -766,19 +766,8 @@ body {
     </div>
 
     <div class="form-group">
-      <label class="form-label">This Weekend?</label>
-      <div class="weekend-toggle" id="weekendToggleWrap">
-        <div class="weekend-toggle-label">Add to "This Weekend" list</div>
-        <div class="toggle-switch" id="fWeekendToggle"></div>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Next Weekend?</label>
-      <div class="weekend-toggle" id="nextWeekendToggleWrap">
-        <div class="weekend-toggle-label">Add to "Next Weekend" list</div>
-        <div class="toggle-switch" id="fNextWeekendToggle"></div>
-      </div>
+      <label class="form-label">Weekend</label>
+      <div class="cat-grid" id="fWeekendGrid"></div>
     </div>
 
     <!-- Subtasks (edit mode only) -->
@@ -822,6 +811,56 @@ const CATEGORIES = [
   'Painting / Drywall','Flooring','General Repair','Cleaning / Organization','Insulation'
 ];
 
+// ===== WEEKEND HELPERS =====
+const WEEKENDS_KEY = 'home-tasks-weekends-v1';
+let extraWeekends = [];
+
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseSat(s) { return new Date(s + 'T00:00:00'); }
+
+function getThisWeekendSat() {
+  var d = new Date();
+  var day = d.getDay();
+  if (day === 0) d.setDate(d.getDate() - 1);
+  else if (day !== 6) d.setDate(d.getDate() + (6 - day));
+  return toDateStr(d);
+}
+function getNextWeekendSat() {
+  var d = parseSat(getThisWeekendSat());
+  d.setDate(d.getDate() + 7);
+  return toDateStr(d);
+}
+function formatWeekendRange(satStr) {
+  var sat = parseSat(satStr);
+  var sun = new Date(sat); sun.setDate(sun.getDate() + 1);
+  var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (sat.getMonth() === sun.getMonth()) return m[sat.getMonth()] + ' ' + sat.getDate() + '–' + sun.getDate();
+  return m[sat.getMonth()] + ' ' + sat.getDate() + '–' + m[sun.getMonth()] + ' ' + sun.getDate();
+}
+function getWeekendLabel(satStr, short) {
+  if (satStr === getThisWeekendSat()) return short ? 'This Weekend' : '⚡ This Weekend';
+  if (satStr === getNextWeekendSat()) return short ? 'Next Weekend' : '📅 Next Weekend';
+  return formatWeekendRange(satStr);
+}
+
+function loadExtraWeekends() {
+  try {
+    var raw = localStorage.getItem(WEEKENDS_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        var thisSat = getThisWeekendSat();
+        extraWeekends = parsed.filter(function(w) { return typeof w === 'string' && w >= thisSat; });
+      }
+    }
+  } catch { extraWeekends = []; }
+}
+function saveExtraWeekends() {
+  try { localStorage.setItem(WEEKENDS_KEY, JSON.stringify(extraWeekends)); } catch(e) { console.error(e); }
+}
+
 let tasks = [];
 let currentTaskId = null;
 let stepEditMode = false;
@@ -829,8 +868,7 @@ let stepEditMode = false;
 // Form state
 let formPri = 'low';
 let formCat = '';
-let formWeekend = false;
-let formNextWeekend = false;
+let formWeekendId = null;
 let editId = null;
 
 // ===== STORAGE =====
@@ -839,14 +877,22 @@ function isValidUUID(s) { return typeof s === 'string' && UUID_RE.test(s); }
 
 const VALID_PRIORITIES = ['high', 'med', 'low'];
 function normalizeTask(raw) {
+  // Migrate old boolean weekend/nextWeekend to weekendId
+  var weekendId = null;
+  if (typeof raw.weekendId === 'string' && raw.weekendId) {
+    weekendId = raw.weekendId;
+  } else if (raw.weekend) {
+    weekendId = getThisWeekendSat();
+  } else if (raw.nextWeekend) {
+    weekendId = getNextWeekendSat();
+  }
   return {
     id: raw.id,
     title: typeof raw.title === 'string' ? raw.title : '',
     category: typeof raw.category === 'string' && raw.category ? raw.category : 'General Repair',
     priority: VALID_PRIORITIES.includes(raw.priority) ? raw.priority : 'low',
     done: !!raw.done,
-    weekend: !!raw.weekend,
-    nextWeekend: !!raw.nextWeekend,
+    weekendId: weekendId,
     subtasks: Array.isArray(raw.subtasks)
       ? raw.subtasks.filter(s => s && typeof s.text === 'string').map(s => ({ text: s.text, done: !!s.done }))
       : [],
@@ -892,7 +938,7 @@ let formSubs = [];
 
 function showForm(id) {
   editId = id || null;
-  formPri = 'low'; formCat = ''; formWeekend = false; formNextWeekend = false;
+  formPri = 'low'; formCat = ''; formWeekendId = null;
   formSubs = [];
   document.getElementById('fTitle').value = '';
   document.getElementById('fNotes').value = '';
@@ -905,8 +951,7 @@ function showForm(id) {
       document.getElementById('fTitle').value = t.title;
       formPri = t.priority;
       formCat = t.category;
-      formWeekend = t.weekend;
-      formNextWeekend = t.nextWeekend || false;
+      formWeekendId = t.weekendId || null;
       formSubs = (t.subtasks || []).map(s => ({ ...s }));
       document.getElementById('fNotes').value = t.notes || '';
     }
@@ -923,7 +968,6 @@ function showForm(id) {
   renderFormCats();
   renderFormPri();
   renderFormWeekend();
-  renderFormNextWeekend();
   if (isEdit) renderFormSubs();
   showView('viewForm');
   setTimeout(() => { if (!editId) document.getElementById('fTitle').focus(); }, 100);
@@ -988,50 +1032,52 @@ function render() {
 }
 
 function renderTaskList() {
-  const weekendTasks = tasks.filter(t => t.weekend && !t.done);
-  const nextWeekendTasks = tasks.filter(t => t.nextWeekend && !t.done);
-  const otherTasks = tasks.filter(t => !((t.weekend || t.nextWeekend) && !t.done));
-
-  // Sort: incomplete first, then by priority weight, then by creation date
   const priWeight = { high: 0, med: 1, low: 2 };
   const sortFn = (a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
     if (priWeight[a.priority] !== priWeight[b.priority]) return priWeight[a.priority] - priWeight[b.priority];
     return b.created - a.created;
   };
-  weekendTasks.sort(sortFn);
-  nextWeekendTasks.sort(sortFn);
-  otherTasks.sort(sortFn);
 
-  // Weekend section
+  // Group active tasks by weekendId
+  const weekendGroups = {};
+  const otherTasks = [];
+  tasks.forEach(function(t) {
+    if (t.weekendId && !t.done) {
+      if (!weekendGroups[t.weekendId]) weekendGroups[t.weekendId] = [];
+      weekendGroups[t.weekendId].push(t);
+    } else {
+      otherTasks.push(t);
+    }
+  });
+
+  // Sort weekend IDs chronologically
+  const sortedWeekendIds = Object.keys(weekendGroups).sort();
+
+  // Build weekend sections
   const ws = document.getElementById('weekendSection');
   let wsHtml = '';
-  if (weekendTasks.length > 0) {
+  sortedWeekendIds.forEach(function(wid) {
+    weekendGroups[wid].sort(sortFn);
     wsHtml += `
-      <div class="section-label">⚡ This Weekend</div>
-      <div class="task-list" style="margin-bottom:20px">${weekendTasks.map(cardHtml).join('')}</div>
+      <div class="section-label">${getWeekendLabel(wid)}</div>
+      <div class="task-list" style="margin-bottom:20px">${weekendGroups[wid].map(cardHtml).join('')}</div>
     `;
-  }
-  if (nextWeekendTasks.length > 0) {
-    wsHtml += `
-      <div class="section-label">📅 Next Weekend</div>
-      <div class="task-list" style="margin-bottom:20px">${nextWeekendTasks.map(cardHtml).join('')}</div>
-    `;
-  }
+  });
   ws.innerHTML = wsHtml;
 
   // All tasks label
-  const hasWeekendSections = weekendTasks.length > 0 || nextWeekendTasks.length > 0;
+  const hasWeekendSections = sortedWeekendIds.length > 0;
+  otherTasks.sort(sortFn);
   const al = document.getElementById('allLabel');
   al.style.display = (hasWeekendSections && otherTasks.length > 0) ? 'flex' : 'none';
   al.innerHTML = 'Everything Else';
   al.innerHTML += `<span></span>`;
-  // Fix: restore the ::after via re-adding class
   al.className = 'section-label';
 
   // Task list
   const tl = document.getElementById('taskList');
-  if (otherTasks.length === 0 && weekendTasks.length === 0 && nextWeekendTasks.length === 0) {
+  if (otherTasks.length === 0 && sortedWeekendIds.length === 0) {
     tl.innerHTML = `<div class="empty"><div class="empty-icon">🏠</div><p>No tasks yet — tap + to add one</p></div>`;
   } else {
     tl.innerHTML = otherTasks.map(cardHtml).join('');
@@ -1071,8 +1117,7 @@ function renderDetail() {
     <div class="detail-badges">
       <span class="badge badge-cat">${catLabel(t.category || 'Uncategorized','badge')}</span>
       <span class="badge ${priBadgeClass}">${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}</span>
-      ${t.weekend ? '<span class="badge badge-weekend">⚡ Weekend</span>' : ''}
-      ${t.nextWeekend ? '<span class="badge badge-weekend">📅 Next Weekend</span>' : ''}
+      ${t.weekendId ? '<span class="badge badge-weekend">' + getWeekendLabel(t.weekendId) + '</span>' : ''}
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="step-edit-btn ${stepEditMode?'active':''}" data-action="toggle-step-edit">Edit</button>
@@ -1229,20 +1274,47 @@ function setPri(p) {
   renderFormPri();
 }
 
-function renderFormWeekend() {
-  document.getElementById('fWeekendToggle').classList.toggle('on', formWeekend);
+var _weekendOptions = [];
+function getWeekendOptions() {
+  var thisSat = getThisWeekendSat();
+  var nextSat = getNextWeekendSat();
+  var options = [
+    { id: null, label: 'None' },
+    { id: thisSat, label: 'This Weekend' },
+    { id: nextSat, label: 'Next Weekend' }
+  ];
+  var seen = new Set([thisSat, nextSat]);
+  extraWeekends.slice().sort().forEach(function(w) {
+    if (!seen.has(w)) { options.push({ id: w, label: formatWeekendRange(w) }); seen.add(w); }
+  });
+  tasks.forEach(function(t) {
+    if (t.weekendId && !seen.has(t.weekendId)) {
+      options.push({ id: t.weekendId, label: formatWeekendRange(t.weekendId) });
+      seen.add(t.weekendId);
+    }
+  });
+  return options;
 }
-function toggleWeekend() {
-  formWeekend = !formWeekend;
+function renderFormWeekend() {
+  _weekendOptions = getWeekendOptions();
+  document.getElementById('fWeekendGrid').innerHTML = _weekendOptions.map(function(o, i) {
+    return '<button class="cat-option' + (formWeekendId === o.id ? ' selected' : '') + '" data-weekend-idx="' + i + '">' + o.label + '</button>';
+  }).join('') + '<button class="cat-option" data-action="add-weekend">+ Add</button>';
+}
+function setFormWeekend(id) {
+  formWeekendId = id;
   renderFormWeekend();
 }
-
-function renderFormNextWeekend() {
-  document.getElementById('fNextWeekendToggle').classList.toggle('on', formNextWeekend);
-}
-function toggleNextWeekend() {
-  formNextWeekend = !formNextWeekend;
-  renderFormNextWeekend();
+function addWeekend() {
+  var existing = new Set(_weekendOptions.map(function(o) { return o.id; }).filter(Boolean));
+  var d = parseSat(getNextWeekendSat());
+  d.setDate(d.getDate() + 7);
+  while (existing.has(toDateStr(d))) d.setDate(d.getDate() + 7);
+  var newId = toDateStr(d);
+  extraWeekends.push(newId);
+  saveExtraWeekends();
+  formWeekendId = newId;
+  renderFormWeekend();
 }
 
 function saveTask() {
@@ -1255,8 +1327,7 @@ function saveTask() {
       t.title = title;
       t.category = formCat || 'General Repair';
       t.priority = formPri;
-      t.weekend = formWeekend;
-      t.nextWeekend = formNextWeekend;
+      t.weekendId = formWeekendId;
       t.subtasks = formSubs;
       t.notes = document.getElementById('fNotes').value;
     }
@@ -1269,8 +1340,7 @@ function saveTask() {
       title,
       category: formCat || 'General Repair',
       priority: formPri,
-      weekend: formWeekend,
-      nextWeekend: formNextWeekend,
+      weekendId: formWeekendId,
       done: false,
       subtasks: [],
       notes: '',
@@ -1299,8 +1369,6 @@ function esc(s) {
 // Static form elements
 document.getElementById('fabAdd').addEventListener('click', function() { showForm(); });
 document.getElementById('formBackBtn').addEventListener('click', cancelForm);
-document.getElementById('weekendToggleWrap').addEventListener('click', toggleWeekend);
-document.getElementById('nextWeekendToggleWrap').addEventListener('click', toggleNextWeekend);
 document.getElementById('fSubInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') addFormSub();
 });
@@ -1320,6 +1388,13 @@ document.getElementById('priOptions').addEventListener('click', function(e) {
 document.getElementById('fCatGrid').addEventListener('click', function(e) {
   var btn = e.target.closest('[data-cat-idx]');
   if (btn) setFormCat(CATEGORIES[parseInt(btn.dataset.catIdx)]);
+});
+
+// Weekend grid delegation
+document.getElementById('fWeekendGrid').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-weekend-idx]');
+  if (btn) { setFormWeekend(_weekendOptions[parseInt(btn.dataset.weekendIdx)].id); return; }
+  if (e.target.closest('[data-action="add-weekend"]')) { addWeekend(); return; }
 });
 
 // Main list view delegation
@@ -1356,6 +1431,7 @@ document.getElementById('viewDetail').addEventListener('keydown', function(e) {
 });
 
 // ===== INIT =====
+loadExtraWeekends();
 load();
 </script>
 </body>
