@@ -96,14 +96,19 @@ body {
 .stat-pill span { color: var(--accent); }
 
 /* Mini calendars */
-.mini-cals {
+.mini-cals-wrap {
+  flex: 1;
   display: flex;
-  gap: 4px;
-  align-items: flex-end;
   justify-content: center;
-  padding: 0 4px;
+  align-items: flex-end;
   overflow: hidden;
   min-width: 0;
+}
+.mini-cals {
+  display: flex;
+  gap: 8px;
+  transform: scale(0.38);
+  transform-origin: center bottom;
 }
 .mini-cal {
   display: flex;
@@ -111,22 +116,21 @@ body {
   align-items: center;
 }
 .mini-cal-month {
-  font-size: 6px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   color: var(--text-mid);
-  line-height: 1;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 .mini-cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 9px);
+  grid-template-columns: repeat(7, 20px);
   gap: 0;
 }
 .mini-cal-dow {
-  height: 7px;
-  font-size: 4.5px;
+  height: 14px;
+  font-size: 9px;
   font-weight: 600;
   color: var(--text-dim);
   display: flex;
@@ -135,14 +139,14 @@ body {
   text-transform: uppercase;
 }
 .mini-cal-day {
-  height: 8px;
-  font-size: 5.5px;
+  height: 18px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--text-mid);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1px;
+  border-radius: 3px;
 }
 .mini-cal-day.empty { visibility: hidden; }
 .mini-cal-day.wknd { color: var(--accent); opacity: 0.5; }
@@ -150,7 +154,7 @@ body {
   background: var(--accent);
   color: var(--bg);
   font-weight: 700;
-  border-radius: 2px;
+  border-radius: 4px;
   opacity: 1;
 }
 
@@ -780,7 +784,7 @@ body {
   <div class="app">
     <div class="header">
       <h1>Home Tasks</h1>
-      <div class="mini-cals" id="miniCals"></div>
+      <div class="mini-cals-wrap"><div class="mini-cals" id="miniCals"></div></div>
       <div class="stat-pill" id="taskCount"></div>
     </div>
 
